@@ -1,0 +1,81 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: org0-peer0
+spec:
+  type: LoadBalancer
+  selector:
+    app: org0-peer0
+  ports:
+  - name: peer-port
+    port: 7051
+    targetPort: 7051
+  - name: op-port
+    port: 8051
+    targetPort: 8051
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: org0-peer0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: org0-peer0
+  template:
+    metadata:
+      labels:
+        app: org0-peer0
+    spec:
+      hostname: master
+      containers:
+      - name: org0-peer0
+        image: hyperledger/fabric-peer:2.5
+        ports:
+        - containerPort: 7051
+        volumeMounts:
+        - mountPath: /tmp/hyperledger/org0/peer0
+          name: org0-peer0-volume
+        - mountPath: /host/var/run
+          name: org0-docker-volume
+        workingDir: /opt/gopath/src/github.com/hyperledger/fabric/org0/peer0
+        env:
+        - name: CORE_PEER_ID
+          value: "org0-peer0"
+        - name: CORE_PEER_ADDRESS
+          value: "master:7051"
+        - name: CORE_PEER_LOCALMSPID
+          value: "org0-msp"
+        - name: CORE_PEER_MSPCONFIGPATH
+          value: "/tmp/hyperledger/org0/peer0/msp"
+        - name: CORE_PEER_TLS_ENABLED
+          value: "true"
+        - name: CORE_PEER_TLS_CERT_FILE
+          value: "/tmp/hyperledger/org0/peer0/tls/signcerts/cert.pem"
+        - name: CORE_PEER_TLS_KEY_FILE
+          value: "/tmp/hyperledger/org0/peer0/tls/keystore/e70d239eb05f851f7e4bf463956ce15854403f13ec27f1e66e5854d61ce7d160_sk"
+        - name: CORE_PEER_TLS_ROOTCERT_FILE
+          value: "/tmp/hyperledger/org0/peer0/tls/root-cert/tls-ca-cert.pem"
+        - name: CORE_PEER_GOSSIP_USELEADERELECTION
+          value: "true"
+        - name: CORE_PEER_GOSSIP_ORGLEADER
+          value: "false"
+        - name: CORE_PEER_GOSSIP_EXTERNALENDPOINT
+          value: "master:7051"
+        - name: CORE_OPERATIONS_LISTENADDRESS
+          value: "master:8051"
+        - name: CORE_OPERATIONS_TLS_ENABLED
+          value: "false"
+        - name: CORE_VM_ENDPOINT
+          value: "unix:///host/var/run/docker.sock"
+      volumes:
+        - name: org0-peer0-volume
+          hostPath:
+            path: /root/hfb/org0/peers/peer0
+            type: Directory
+        - name: org0-docker-volume
+          hostPath:
+            path: /var/run
+            type: Directory
+

@@ -1,0 +1,52 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: org0-tls-ca
+spec:
+  type: LoadBalancer
+  selector:
+    app: org0-tls-ca
+  ports:
+  - port: 7052
+    targetPort: 7052
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: org0-tls-ca
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: org0-tls-ca
+  template:
+    metadata:
+      labels:
+        app: org0-tls-ca
+    spec:
+      containers:
+      - name: org0-tls-ca
+        image: hyperledger/fabric-ca:1.5
+        ports:
+        - containerPort: 7052
+        volumeMounts:
+        - mountPath: /tmp/hyperledger/fabric-ca
+          name: org0-tls-ca-volume
+        env:
+        - name: FABRIC_CA_SERVER_HOME
+          value: "/tmp/hyperledger/fabric-ca/crypto"
+        - name: FABRIC_CA_SERVER_TLS_ENABLED
+          value: "true"
+        - name: FABRIC_CA_SERVER_CSR_CN
+          value: "tls-ca"
+        - name: FABRIC_CA_SERVER_CSR_HOSTS
+          value: "0.0.0.0,master,master-node1,master-*,org*"
+        - name: FABRIC_CA_SERVER_DEBUG
+          value: "true"
+        command: ["sh"]
+        args: ["-c", "fabric-ca-server start -d -b admin-org0-tls-ca:adminpw --port 7052"]
+      volumes:
+        - name: org0-tls-ca-volume
+          hostPath:
+            path: /root/hfb/tls-ca/server
+            type: Directory
