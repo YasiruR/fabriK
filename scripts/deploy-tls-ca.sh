@@ -16,6 +16,7 @@ log() {
 	echo "$log_prefix $1"
 }
 
+# setup TLS server
 {
 mkdir -p "$tls_ca_path/server"
 kubectl apply -f "$tls_manifest_path" && log "TLS CA manifest is being deployed..." && sleep 5 && log "kubernetes service (name: $tls_ca_svc) has been created for TLS CA"
@@ -28,6 +29,7 @@ log "files and directories created for TLS CA"
 tree "$tls_ca_path/server"
 }
 
+# install wget if does not exist
 if [[ $(dpkg -l | grep wget | wc -l) == 0 ]]; then
 	log "installing wget..."
 	apt install wget  > /dev/null
@@ -60,3 +62,4 @@ log "$tls_ca_svc service is running on port $tls_ca_port"
 "$hfb_path"/ca-client/fabric-ca-client enroll -d -u "https://$tls_admin:$tls_admin_pw@$hostname:$tls_ca_port" --mspdir "$hfb_path/admin/msp"
 
 log "registered and enrolled the admin user for TLS CA (ID: $tls_admin, password: $tls_admin_pw)"
+log "TLS CA is deployed successfully"
