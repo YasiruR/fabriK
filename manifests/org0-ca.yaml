@@ -39,14 +39,15 @@ spec:
           value: "true"
         - name: FABRIC_CA_SERVER_CSR_CN
           value: "org0-ca"
-        - name: FABRIC_CA_SERVER_CSR_HOSTS
-          value: "0.0.0.0,master,org0-*"
+        # CSR hosts are not required since org0-ca will not generate its TLS sign certificates
+        #- name: FABRIC_CA_SERVER_CSR_HOSTS
+        #  value: "0.0.0.0,master,org0-*"
         - name: FABRIC_CA_SERVER_DEBUG
           value: "true"
         - name: FABRIC_CA_SERVER_TLS_CERTFILE
           value: "/tmp/hyperledger/fabric-ca/tls/signcerts/cert.pem"
         - name: FABRIC_CA_SERVER_TLS_KEYFILE
-          value: "/tmp/hyperledger/fabric-ca/tls/keystore/b3f8497760c6ae6f4383fbeadb4d63d89ecb0df019edf6333162b5d6b1994491_sk"
+          value: "/tmp/hyperledger/fabric-ca/tls/keystore/key.pem"
         command: ["sh"]
         args: ["-c", "fabric-ca-server start -d -b admin-org0:adminpw --port 7053"]
       volumes:

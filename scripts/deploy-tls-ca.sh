@@ -1,6 +1,7 @@
 #!/bin/bash
 
 log_prefix='--->'
+sleep_s=7
 
 hostname='master-node1'
 hfb_path='/root/hfb'
@@ -19,7 +20,7 @@ log() {
 # setup TLS server
 {
 mkdir -p "$tls_ca_path/server"
-kubectl apply -f "$tls_manifest_path" && log "TLS CA manifest is being deployed..." && sleep 5 && log "kubernetes service (name: $tls_ca_svc) has been created for TLS CA"
+kubectl apply -f "$tls_manifest_path" && log "TLS CA manifest is being deployed..." && sleep $sleep_s && log "kubernetes service (name: $tls_ca_svc) has been created for TLS CA"
 } &&
 {
 # copy tls root certificate to root-cert directory
@@ -56,10 +57,14 @@ export FABRIC_CA_CLIENT_TLS_CERTFILES="$tls_ca_path/root-cert/tls-ca-cert.pem"
 export FABRIC_CA_CLIENT_HOME="$hfb_path/ca-client"
 
 # enroll TLS CA admin
-mkdir -p "$hfb_path/admin/msp"
+mkdir -p "$tls_ca_path/admin/msp"
 tls_ca_port="$(kubectl get svc $tls_ca_svc | awk 'FNR == 2 {print $5}' | sed -e "s/^.*://" -e "s/\/TCP//")"
 log "$tls_ca_svc service is running on port $tls_ca_port"
-"$hfb_path"/ca-client/fabric-ca-client enroll -d -u "https://$tls_admin:$tls_admin_pw@$hostname:$tls_ca_port" --mspdir "$hfb_path/admin/msp"
+"$hfb_path"/ca-client/fabric-ca-client enroll -d -u "https://$tls_admin:$tls_admin_pw@$hostname:$tls_ca_port" --mspdir "$tls_ca_path/admin/msp"
+
+# copy tls root cert to client directory
+mkdir -p /root/hfb/ca-client/tls-root-cert/
+cp /root/hfb/tls-ca/root-cert/tls-ca-cert.pem /root/hfb/ca-client/tls-root-cert/
 
 log "registered and enrolled the admin user for TLS CA (ID: $tls_admin, password: $tls_admin_pw)"
 log "TLS CA is deployed successfully"
