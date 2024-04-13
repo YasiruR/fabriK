@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Prerequisites:
-#   1. Register org admin user with TLS CA manually
-#       a. These will be used as the admin credentials defined by variables below
-#       b. Update key file and sign certificate in the manifest
-#   2. Move root signed certificate of TLS CA OOB to the root directory of the node deploying org admin
-#       a. This file path should be updated in the corresponding variable below
+#   1. If TLS CA is located locally on the same machine, can use -l flag for automatic registration
+#   2. If not, should register org admin user with TLS CA manually
+#     a. These will be used as the admin credentials defined by variables below
+#     b. Move root signed certificate of TLS CA OOB to the root directory of the node deploying org admin
+#     c. Update this file path in the corresponding variable below
 
 log_prefix='--->'
 sleep_s=10
