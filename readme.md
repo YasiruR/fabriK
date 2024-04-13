@@ -21,4 +21,6 @@ be applied to the manifest files accordingly.
 The following stack of components provides an overview of a sample
 architecture where the network is deployed.
 
-![alt text](docs/arch.png)
+<p align="center">
+  <img src="docs/stack.png" />
+</p>
