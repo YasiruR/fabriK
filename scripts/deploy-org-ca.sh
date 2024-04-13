@@ -6,6 +6,7 @@
 #     a. These will be used as the admin credentials defined by variables below
 #     b. Move root signed certificate of TLS CA OOB to the root directory of the node deploying org admin
 #     c. Update this file path in the corresponding variable below
+#     d. Update host and port of TLS CA
 
 log_prefix='--->'
 sleep_s=10
@@ -101,7 +102,7 @@ fi
 
 # enroll org admin user with TLS CA
 log "enrolling organization admin user with TLS CA server"
-"$hfb_path"/ca-client/fabric-ca-client enroll -d -u "https://$org_admin:$org_admin_pw@$tls_ca_host:$tls_ca_port" --csr.hosts "'0.0.0.0,$org_ca_host,$org_name-ord0,$org_name-ord1,$org_name-peer0,$org_name-peer1,$org_name-client0,$org_name-client1'" --mspdir "$admin_path/tls"
+"$hfb_path"/ca-client/fabric-ca-client enroll -d -u "https://$org_admin:$org_admin_pw@$tls_ca_host:$tls_ca_port" --csr.hosts "'0.0.0.0,$org_ca_host,$org_name-ca,$org_name-ca-pod'" --mspdir "$admin_path/tls"
 
 # setup org CA server and deploy
 log "deploying CA server"
