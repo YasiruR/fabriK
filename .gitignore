@@ -2,3 +2,6 @@
 .idea
 
 chaincode/vendor
+chaincode/asset_*.tgz
+chaincode/code.tar.gz
+

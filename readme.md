@@ -22,3 +22,6 @@ The following stack of components provides an overview of a sample
 architecture where the network is deployed.
 
 ![alt text](docs/stack.png)
+
+[//]: # ( ADD STATUS OF SCRIPTS)
+[//]: # ( ADD ARGS FOR SCRIPTS)

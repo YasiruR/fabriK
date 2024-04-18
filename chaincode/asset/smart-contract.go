@@ -1,9 +1,11 @@
-package chaincode
+package asset
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/hyperledger/fabric-chaincode-go/shim"
 	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/hyperledger/fabric-protos-go/peer"
 	"strconv"
 )
 
@@ -11,6 +13,16 @@ import (
 
 type SmartContract struct {
 	contractapi.Contract
+}
+
+func (s *SmartContract) Init(stub shim.ChaincodeStubInterface) peer.Response {
+	fmt.Println(`--> smart contract init func executed`)
+	return shim.Success(nil)
+}
+
+func (s *SmartContract) Invoke(stub shim.ChaincodeStubInterface) peer.Response {
+	fmt.Println(`--> smart contract invoke func executed`)
+	return shim.Success(nil)
 }
 
 // Asset attributes are defined in alphabetical order to make JSON struct deterministic
