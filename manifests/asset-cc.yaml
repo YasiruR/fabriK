@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: asset-cc-8-0
+spec:
+  type: LoadBalancer
+  selector:
+    app: asset-cc-8-0
+  ports:
+    - port: 6051
+      targetPort: 6051
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asset-cc-8-0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: asset-cc-8-0
+  template:
+    metadata:
+      labels:
+        app: asset-cc-8-0
+    spec:
+      hostname: asset-cc-8-0-pod
+      containers:
+        - name: asset-cc-8-0
+          image: yasii/asset-cc:0.1
+          ports:
+            - containerPort: 6051
+          env:
+            - name: CC_ID
+              value: "asset_8.0:28e66b55df0299f53b4b06d72bedb33aa2b1ff1c3ac73d7348dc100eacffb124"
+            - name: CC_SERVER_ADDRESS
+              value: "asset-cc-8-0-pod:6051"

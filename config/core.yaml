@@ -601,7 +601,7 @@ chaincode:
     # The path must be an absolute path.
     externalBuilders:
        - name: asset-builder
-         path: /tmp/hyperledger/org1/peer0/chaincode/bin
+         path: /opt/hyperledger/ccaas_builder
 #         propagateEnvironment:
 #           - CHAINCODE_AS_A_SERVICE_BUILDER_CONFIG
 

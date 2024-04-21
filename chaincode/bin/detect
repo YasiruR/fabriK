@@ -2,6 +2,8 @@
 
 set -euo pipefail
 
+echo "starting detect script..."
+
 METADIR=$2
 # check if the "type" field is set to "external"
 # crude way without jq which is not in the default fabric peer image

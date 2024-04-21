@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: org1-peer0
+spec:
+  type: LoadBalancer
+  selector:
+    app: org1-peer0
+  ports:
+    - name: peer-port
+      port: 7051
+      targetPort: 7051
+    - name: op-port
+      port: 8051
+      targetPort: 8051
+    - name: gossip-port
+      port: 9051
+      targetPort: 9051
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: org1-peer0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: org1-peer0
+  template:
+    metadata:
+      labels:
+        app: org1-peer0
+    spec:
+      hostname: org1-peer0-pod
+      containers:
+        - name: org1-peer0
+          image: hyperledger/fabric-peer:2.5
+          ports:
+            - containerPort: 7051
+          volumeMounts:
+            - mountPath: /tmp/hyperledger/org1/peer0
+              name: org1-peer0-volume
+            - mountPath: /host/var/run
+              name: org1-docker-volume
+            - mountPath: /tmp/hyperledger/org1/admin/msp
+              name: org1-admin-peer0-volume
+            - mountPath: /etc/hyperledger/fabric/core.yaml
+              name: org1-peer0-core-volume
+            - mountPath: /opt/hyperledger/ccaas_builder
+              name: buildpack-volume
+          workingDir: /opt/gopath/src/github.com/hyperledger/fabric/org1/peer0
+          env:
+            - name: CORE_PEER_ID
+              value: "org1-peer0"
+            - name: CORE_PEER_ADDRESS
+              value: "org1-peer0-pod:7051"
+            - name: CORE_PEER_LOCALMSPID
+              value: "org1-msp"
+            - name: CORE_PEER_MSPCONFIGPATH
+              value: "/tmp/hyperledger/org1/peer0/msp"
+            - name: CORE_PEER_TLS_ENABLED
+              value: "true"
+            - name: CORE_PEER_TLS_CERT_FILE
+              value: "/tmp/hyperledger/org1/peer0/tls/signcerts/cert.pem"
+            - name: CORE_PEER_TLS_KEY_FILE
+              value: "/tmp/hyperledger/org1/peer0/tls/keystore/4c3ce3e69701ee9690418cce4856f09cd477661f39bc00bede22c7debca9dcb3_sk"
+            - name: CORE_PEER_TLS_ROOTCERT_FILE
+              value: "/tmp/hyperledger/org1/peer0/tls/cacerts/master-node1-31063.pem"
+            - name: CORE_PEER_GOSSIP_USELEADERELECTION
+              value: "true"
+            - name: CORE_PEER_GOSSIP_ORGLEADER
+              value: "false"
+            - name: CORE_PEER_GOSSIP_EXTERNALENDPOINT
+              value: "org1-peer0-pod:9051"
+            - name: CORE_OPERATIONS_LISTENADDRESS
+              value: "org1-peer0-pod:8051"
+            - name: CORE_OPERATIONS_TLS_ENABLED
+              value: "false"
+            - name: FABRIC_CFG_PATH
+              value: "/tmp/hyperledger/org1/peer0/config"
+            - name: CORE_VM_ENDPOINT
+              value: "unix:///host/var/run/docker.sock"
+      volumes:
+        - name: org1-peer0-volume
+          hostPath:
+            path: /root/hfb/org1/peers/peer0
+            type: Directory
+        - name: org1-admin-peer0-volume
+          hostPath:
+            path: /root/hfb/org1/peers/admin/msp
+            type: Directory
+        - name: org1-docker-volume
+          hostPath:
+            path: /var/run
+            type: Directory
+        - name: org1-peer0-core-volume
+          hostPath:
+            path: /root/hfb/org1/peers/peer0/config/core.yaml
+            type: File
+        - name: buildpack-volume
+          hostPath:
+            path: /root/hfb/buildpack
+            type: Directory
