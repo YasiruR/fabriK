@@ -4,33 +4,32 @@ import (
 	"fmt"
 	"github.com/YasiruR/fabriK/chaincode/asset"
 	"github.com/hyperledger/fabric-chaincode-go/shim"
-	"log"
+	"github.com/hyperledger/fabric-contract-api-go/contractapi"
+	"github.com/tryfix/log"
 	"os"
 )
 
 func main() {
-	//assetCC, err := contractapi.NewChaincode(&asset.SmartContract{})
-	//if err != nil {
-	//	log.Fatalln(fmt.Sprintf(`Error creating chaincode - %v`, err))
-	//}
-	//
-	//if err = assetCC.Start(); err != nil {
-	//	log.Fatalln(fmt.Sprintf(`Error starting chaincode - %v`, err))
-	//}
-
-	/* TO invoke chaincode as an external service */
+	/* invoke chaincode as an external service */
+	assetCC, err := contractapi.NewChaincode(&asset.SmartContract{})
+	if err != nil {
+		log.Fatal(fmt.Sprintf(`creating chaincode failed - %v`, err))
+	}
+	log.Info(`chaincode is created for asset smart contract`)
 
 	ccId := os.Getenv(`CC_ID`)
+	ccAddr := os.Getenv(`CC_SERVER_ADDRESS`)
 	server := &shim.ChaincodeServer{
 		CCID:    ccId,
-		Address: os.Getenv(`CC_SERVER_ADDRESS`),
-		CC:      new(asset.SmartContract),
+		Address: ccAddr,
+		CC:      assetCC,
 		TLSProps: shim.TLSProperties{
 			Disabled: true,
 		},
 	}
 
-	if err := server.Start(); err != nil {
-		log.Fatalln(fmt.Sprintf("Error starting server: %s\n", err))
+	if err = server.Start(); err != nil {
+		log.Fatal(fmt.Sprintf("starting server failed - %s", err))
 	}
+	log.Info(fmt.Sprintf("chaincode is up and running at %s with ID: %s", ccAddr, ccId))
 }
