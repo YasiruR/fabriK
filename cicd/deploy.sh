@@ -56,6 +56,88 @@ Flags:
   exit 0
 fi
 
+## util functions
+create_manifest(){
+  cc_id=$1
+  cc_addr=$2
+  cc_name=$3
+  cc_ver=$4
+  cc_k8s_ver=$5
+  d_usr=$6
+
+  # parse chaincode hostname and port from address
+  tmp=(${cc_addr//:/ })
+  if [ ${#tmp[@]} == 2 ]; then
+    cc_host=${tmp[0]}
+    cc_port=${tmp[1]}
+  elif [[ $cc_addr == http* ]]; then
+    cc_host=$(echo "${tmp[1]}" | sed -e "s/^\/\///" )
+    cc_port=${tmp[2]}
+  fi
+
+  # create asset manifest
+  echo -e "apiVersion: v1
+kind: Service
+metadata:
+  name: $cc_name-$cc_k8s_ver
+spec:
+  type: LoadBalancer
+  selector:
+    app: $cc_name-$cc_k8s_ver
+  ports:
+    - port: $cc_port
+      targetPort: $cc_port
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: $cc_name-$cc_k8s_ver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: $cc_name-$cc_k8s_ver
+  template:
+    metadata:
+      labels:
+        app: $cc_name-$cc_k8s_ver
+    spec:
+      hostname: $cc_name-$cc_k8s_ver-pod
+      containers:
+        - name: $cc_name-$cc_k8s_ver
+          image: $d_usr/$cc_name:$cc_ver
+          ports:
+            - containerPort: $cc_port
+          env:
+            - name: CC_ID
+              value: \"$cc_id\"
+            - name: CC_SERVER_ADDRESS
+              value: \"$cc_host-pod:$cc_port\"" > "cc-$cc_name-$cc_k8s_ver.yaml"
+  echo "$cc_port"
+}
+
+create_dockerfile(){
+  cc_name=$1
+  cc_k8s_ver=$2
+  cc_port=$3
+  src=$4
+
+  echo -e "# syntax=docker/dockerfile:1
+FROM golang:1.19
+
+WORKDIR /go/github.com/YasiruR/fabriK/chaincode
+
+COPY $src/go.mod $src/go.sum ./
+COPY $src/start.go ./
+RUN go mod download
+COPY $src/asset ./asset/
+
+RUN CGO_ENABLED=0 GOOS=linux go build -o $cc_name-$cc_k8s_ver
+EXPOSE $cc_port
+
+CMD [\"/go/github.com/YasiruR/fabriK/chaincode/$cc_name-$cc_k8s_ver\"]" > Dockerfile
+}
+
 ## validate args
 # server hostname and ip validation
 if [ "$src" == "" ]; then
@@ -69,25 +151,18 @@ cc_name=${tmp[0]}
 cc_ver=${tmp[1]}
 
 ## pipeline
-#sudo docker build -t "$cc_name:$cc_ver" "$src"    # compile and build docker image
-#sudo docker push "$usr/$cc_name:$cc_ver"          # push docker image to registry
-
 # create chaincode manifest file
 cc_k8s_ver=$(echo "$cc_ver" | tr . -)
-bash create-manifest.sh $cc_addr $cc_name $cc_ver $cc_k8s_ver $d_usr
+cc_port=$(create_manifest $cc_id $cc_addr $cc_name $cc_ver $cc_k8s_ver $d_usr)
+
+# create and deploy Docker image
+create_dockerfile $cc_name $cc_k8s_ver $cc_port $src
+sudo docker build -t "$d_usr/$cc_name:$cc_ver" "$src"   # compile and build docker image
+sudo docker push "$d_usr/$cc_name:$cc_ver"              # push docker image to registry
+
 scp -i "$key" "cc-$cc_name-$cc_k8s_ver.yaml" "$s_usr@$s_addr:$m_path_node"
 
 # log into VM
 ssh -i "$key" "$s_usr@$s_addr" "lxc file push $m_path_node/cc-$cc_name-$cc_k8s_ver.yaml $lxc/$m_path_lxc/; lxc exec $lxc -- kubectl apply -f $m_path_lxc/cc-$cc_name-$cc_k8s_ver.yaml"
-#ssh -i "$key" "$s_usr@$s_addr" "lxc file push $m_path_node/cc-$cc_name-$cc_k8s_ver.yaml $lxc/$m_path_lxc/; lxc shell $lxc; kubectl apply -f $m_path_lxc/cc-$cc_name-$cc_k8s_ver.yaml"
 
-# log into lxc node if enabled
-#if [ "$lxc" != "" ]; then
-#  lxc shell "$lxc"
-#fi
-
-# create a manifest in path
-#mkdir -p "$m_path_lxc"
-
-# apply manifest
-#kubectl apply -f "$m_path_lxc/cc-$cc_name-$cc_k8s_ver.yaml"
+# todo: when lxc node is not used
