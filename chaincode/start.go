@@ -28,8 +28,8 @@ func main() {
 		},
 	}
 
+	log.Info(fmt.Sprintf("chaincode is up and running at %s with ID: %s", ccAddr, ccId))
 	if err = server.Start(); err != nil {
 		log.Fatal(fmt.Sprintf("starting server failed - %s", err))
 	}
-	log.Info(fmt.Sprintf("chaincode is up and running at %s with ID: %s", ccAddr, ccId))
 }
