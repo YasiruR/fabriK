@@ -18,6 +18,11 @@ jobs:
         with:
           go-version: '1.19'
           cache: false
+      - name: Move chaincode to root dir
+        run: |
+          ls -al
+          mv chaincode/* .
+          ls -al
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v4
         with:
