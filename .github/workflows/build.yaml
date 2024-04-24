@@ -3,11 +3,12 @@ run-name: ${{ github.actor }} triggered the pipeline
 on:
   push:
     branches:
-      - main
+      - pipeline
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: golang-lint
         uses: ./.github/workflows/golangci-lint.yaml
   build:
