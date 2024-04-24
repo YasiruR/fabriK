@@ -27,9 +27,8 @@ jobs:
       - name: test logs
         run: |
           echo "${{ github.repository_lc }}"
-          echo "${github.repository_lc}"
-          echo "$repo"
-          cat "${GITHUB_ENV}"
+          echo $repo
+          cat $GITHUB_ENV
       - name: build and push image
         uses: docker/build-push-action@v3
         with:
