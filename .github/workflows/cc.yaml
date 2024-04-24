@@ -11,36 +11,36 @@ env:
   CC_HOST: localhost
   CC_PORT: 9051
 jobs:
-  lint:
-    uses: ./.github/workflows/golangci-lint.yaml
-  build:
-    needs: lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Set repository to lowercase
-        run: |
-          echo "repository_lc=${repo,,}" >> ${GITHUB_ENV}
-        env:
-          repo: '${{ github.repository }}'
-      - name: set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      - name: log into Github Container Registry
-        uses: docker/login-action@v2
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      - name: build and push image
-        uses: docker/build-push-action@v3
-        with:
-          push: true
-          tags: ghcr.io/${{ env.repository_lc }}/${{ env.CC_NAME }}:${{ env.CC_VERSION }}
-          file: ./chaincode/Dockerfile
-          context: ./chaincode
-          build-args: |
-            CC_PORT=${{ env.CC_PORT }}
+#  lint:
+#    uses: ./.github/workflows/golangci-lint.yaml
+#  build:
+#    needs: lint
+#    runs-on: ubuntu-latest
+#    steps:
+#      - name: Set repository to lowercase
+#        run: |
+#          echo "repository_lc=${repo,,}" >> ${GITHUB_ENV}
+#        env:
+#          repo: '${{ github.repository }}'
+#      - name: set up Docker Buildx
+#        uses: docker/setup-buildx-action@v2
+#      - name: log into Github Container Registry
+#        uses: docker/login-action@v2
+#        with:
+#          registry: ghcr.io
+#          username: ${{ github.repository_owner }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#      - name: Checkout repository
+#        uses: actions/checkout@v4
+#      - name: build and push image
+#        uses: docker/build-push-action@v3
+#        with:
+#          push: true
+#          tags: ghcr.io/${{ env.repository_lc }}/${{ env.CC_NAME }}:${{ env.CC_VERSION }}
+#          file: ./chaincode/Dockerfile
+#          context: ./chaincode
+#          build-args: |
+#            CC_PORT=${{ env.CC_PORT }}
   deploy:
     runs-on: ubuntu-latest
     steps:

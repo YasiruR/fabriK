@@ -6,6 +6,8 @@ cc_ver=$3
 cc_port=$4
 cr_prefix=$5
 
+pwd
+
 echo -e "apiVersion: v1
 kind: Service
 metadata:
