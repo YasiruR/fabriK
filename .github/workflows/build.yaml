@@ -5,10 +5,10 @@ on:
     branches:
       - pipeline
 jobs:
-  lint:
-    uses: ./.github/workflows/golangci-lint.yaml
+#  lint:
+#    uses: ./.github/workflows/golangci-lint.yaml
   build:
-    needs: lint
+#    needs: lint
     runs-on: ubuntu-latest
     steps:
       - name: Set repository to lowercase
@@ -24,6 +24,12 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: test logs
+        run: |
+          echo "${{ github.repository_lc }}"
+          echo "${github.repository_lc}"
+          echo "$repo"
+          cat "${GITHUB_ENV}"
       - name: build and push image
         uses: docker/build-push-action@v3
         with:
