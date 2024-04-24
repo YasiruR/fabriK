@@ -7,6 +7,7 @@ cc_port=$4
 cr_prefix=$5
 
 pwd
+ls
 
 echo -e "apiVersion: v1
 kind: Service
@@ -44,4 +45,4 @@ spec:
             - name: CC_ID
               value: \"$cc_id\"
             - name: CC_SERVER_ADDRESS
-              value: \"$cc_name-$cc_ver-pod:$cc_port\"" > "../k8s/cc-$cc_name-$cc_ver.yaml"
+              value: \"$cc_name-$cc_ver-pod:$cc_port\"" > "./.github/k8s/cc-$cc_name-$cc_ver.yaml"
