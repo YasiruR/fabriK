@@ -8,7 +8,7 @@ COPY start.go ./
 RUN go mod download
 COPY asset ./asset/
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o asset-cc-8-0
+RUN CGO_ENABLED=0 GOOS=linux go build -o asset-cc
 EXPOSE 6051
 
-CMD ["/go/github.com/YasiruR/fabriK/chaincode/asset-cc-8-0"]
+CMD ["/go/github.com/YasiruR/fabriK/chaincode/asset-cc"]

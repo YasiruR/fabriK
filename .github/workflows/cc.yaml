@@ -1,0 +1,65 @@
+name: deploy-ccaas
+run-name: ${{ github.actor }} triggered the pipeline
+on:
+  push:
+    branches:
+      - pipeline
+env:
+  CC_NAME: asset-cc
+  CC_VERSION: 0.1
+  CC_ID: testid
+  CC_HOST: localhost
+  CC_PORT: 9051
+jobs:
+  lint:
+    uses: ./.github/workflows/golangci-lint.yaml
+  build:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set repository to lowercase
+        run: |
+          echo "repository_lc=${repo,,}" >> ${GITHUB_ENV}
+        env:
+          repo: '${{ github.repository }}'
+      - name: set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: log into Github Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: build and push image
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: ghcr.io/${{ env.repository_lc }}/${{ env.CC_NAME }}:${{ env.CC_VERSION }}
+          file: ./chaincode/Dockerfile
+          context: ./chaincode
+          build-args: |
+            CC_PORT=${{ env.CC_PORT }}
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create manifest
+        run: |
+          chmod +x ./.github/scripts/create-manifest.sh
+          bash ./.github/scripts/create-manifest.sh "${{ env.CC_ID }}" "${{ env.CC_NAME }}" "${{ env.CC_VERSION }}" "${{ env.CC_PORT }}" "ghcr.io/${{ env.repository_lc }}"
+      - name: Test manifest
+        run: |
+          ls ./.github/k8s
+      - name: Log manifest
+        run: |
+          cat ./.github/k8s/cc-${{ env.CC_NAME }}-${{ env.CC_VERSION }}.yaml
+#      - name: Transfer manifest to node
+#        uses: appleboy/scp-action@v0.1.7
+#        with:
+#          host: ${{ secrets.K8S_NODE_HOST }}
+#          user: ${{ secrets.K8S_NODE_USER }}
+#          key: ${{ secrets.K8S_NODE_KEY }}
+#          source: "./.github/k8s/cc-${{ env.CC_NAME }}-${{ env.CC_VERSION }}.yaml"
+#          target: "/home/${{ env.K8S_NODE_USER }}/manifests"
