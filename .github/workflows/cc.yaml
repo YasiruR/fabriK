@@ -42,6 +42,7 @@ jobs:
           build-args: |
             CC_PORT=${{ env.CC_PORT }}
   deploy:
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
