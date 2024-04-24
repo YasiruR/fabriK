@@ -47,8 +47,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Create manifest
         run: |
-          chmod +x ./.github/scripts/create-manifest.sh
-          bash ./.github/scripts/create-manifest.sh "${{ env.CC_ID }}" "${{ env.CC_NAME }}" "${{ env.CC_VERSION }}" "${{ env.CC_PORT }}" "ghcr.io/${{ env.repository_lc }}"
+          chmod +x ./scripts/create-manifest.sh
+          bash ./scripts/create-manifest.sh "${{ env.CC_ID }}" "${{ env.CC_NAME }}" "${{ env.CC_VERSION }}" "${{ env.CC_PORT }}" "ghcr.io/${{ env.repository_lc }}"
       - name: Test manifest
         run: |
           ls ./manifests
