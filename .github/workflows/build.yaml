@@ -31,10 +31,12 @@ jobs:
           echo "${{ github.repository }}"
           cat $GITHUB_ENV
           echo $repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
       - name: build and push image
         uses: docker/build-push-action@v3
         with:
           push: true
           tags: ghcr.io/${{ env.repository_lc }}/asset-cc:${{ github.sha }}
           file: ./chaincode/Dockerfile
-          context: chaincode
+          context: ./chaincode
