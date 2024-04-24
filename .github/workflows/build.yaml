@@ -10,7 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: golang-lint
-        uses: ./.github/workflows/golangci-lint.yaml
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54
   build:
     needs: test
     runs-on: ubuntu-latest
