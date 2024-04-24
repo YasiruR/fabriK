@@ -13,7 +13,7 @@ jobs:
     steps:
       - name: Set repository to lowercase
         run: |
-          echo "repo_lc=${repo,,}" >> ${GITHUB_ENV}
+          echo "repository_lc=${repo,,}" >> ${GITHUB_ENV}
         env:
           repo: '${{ github.repository }}'
       - name: set up Docker Buildx
@@ -28,5 +28,5 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: ghcr.io/${{ repo_lc }}/asset-cc:${{ github.sha }}
+          tags: ghcr.io/${{ github.repository_lc }}/asset-cc:${{ github.sha }}
           file: ./chaincode/Dockerfile
