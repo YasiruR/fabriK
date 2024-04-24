@@ -1,10 +1,6 @@
 name: golangci-lint
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-
+  workflow_call:
 permissions:
   contents: read
   # Optional: allow read access to pull request. Use with `only-new-issues` option.
@@ -16,10 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout: 'chaincode'
       - uses: actions/setup-go@v5
         with:
           go-version: '1.19'
           cache: false
+      - name: Move chaincode to root dir
+        run: |
+          ls -al
+          mv chaincode/* .
+          ls -al
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v4
         with:
