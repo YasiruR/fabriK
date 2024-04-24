@@ -1,4 +1,4 @@
-name: chaincode-cicd-action
+name: deploy-ccaas
 run-name: ${{ github.actor }} triggered the pipeline
 on:
   push:
