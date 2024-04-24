@@ -11,6 +11,11 @@ jobs:
     needs: lint
     runs-on: ubuntu-latest
     steps:
+      - name: Set repository to lowercase
+        run: |
+          echo "repo_lc=${repo,,}" >> ${GITHUB_ENV}
+        env:
+          repo: '${{ github.repository }}'
       - name: set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - name: log into Github Container Registry
@@ -23,5 +28,5 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: ghcr.io/${{ github.repository }}/asset-cc:${{ github.sha }}
+          tags: ghcr.io/${{ repo_lc }}/asset-cc:${{ github.sha }}
           file: ./chaincode/Dockerfile
