@@ -8,11 +8,11 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-#      - uses: actions/checkout@v4
-#      - name: Set up Golang
-#        uses: actions/setup-go@v4
-#        with:
-#          go-version: '1.19'
+      - uses: actions/checkout@v4
+      - name: Set up Golang
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.19'
       - name: Run Golang-lint
         uses: ./chaincode
         with:
