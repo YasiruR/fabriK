@@ -51,10 +51,10 @@ jobs:
           bash ./.github/scripts/create-manifest.sh "${{ env.CC_ID }}" "${{ env.CC_NAME }}" "${{ env.CC_VERSION }}" "${{ env.CC_PORT }}" "ghcr.io/${{ env.repository_lc }}"
       - name: Test manifest
         run: |
-          ls ./.github/k8s
+          ls ./manifests
       - name: Log manifest
         run: |
-          cat ./.github/k8s/cc-${{ env.CC_NAME }}-${{ env.CC_VERSION }}.yaml
+          cat ./manifests/cc-${{ env.CC_NAME }}-${{ env.CC_VERSION }}.yaml
 #      - name: Transfer manifest to node
 #        uses: appleboy/scp-action@v0.1.7
 #        with:

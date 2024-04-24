@@ -45,4 +45,4 @@ spec:
             - name: CC_ID
               value: \"$cc_id\"
             - name: CC_SERVER_ADDRESS
-              value: \"$cc_name-$cc_ver-pod:$cc_port\"" > "./.github/k8s/cc-$cc_name-$cc_ver.yaml"
+              value: \"$cc_name-$cc_ver-pod:$cc_port\"" > "./manifests/cc-$cc_name-$cc_ver.yaml"
