@@ -1,10 +1,6 @@
 name: golangci-lint
 on:
-  push:
-    branches:
-      - pipeline
-  pull_request:
-
+  workflow_call:
 permissions:
   contents: read
   # Optional: allow read access to pull request. Use with `only-new-issues` option.
