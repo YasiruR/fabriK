@@ -1,8 +1,5 @@
 #!/bin/bash
 
-## usage:
-# bash deploy.sh -i asset-cc_0.3:34d689e6d -c asset-cc-0-3:5005 -d yasii -u ubuntu -a 10.63.28.50 -k /home/yasi/Documents/work/ceit/remote/k8s-remote -l master-node1 -s /home/yasi/go/src/github.com/YasiruR/fabriK/chaincode
-
 ## prerequisites
 # user must have logged into a docker account of the relevant registry
 
