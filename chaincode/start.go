@@ -11,6 +11,7 @@ import (
 
 func main() {
 	/* invoke chaincode as an external service */
+	log.Info(fmt.Sprintf(`starting chaincode as an external service`))
 	assetCC, err := contractapi.NewChaincode(&asset.SmartContract{})
 	if err != nil {
 		log.Fatal(fmt.Sprintf(`creating chaincode failed - %v`, err))
