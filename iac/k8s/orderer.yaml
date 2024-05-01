@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: <org-name>-<orderer-name>
+spec:
+  type: LoadBalancer
+  selector:
+    app: <org-name>-<orderer-name>
+  ports:
+    - name: orderer-port
+      port: <ord-port>
+      targetPort: <ord-port>
+    - name: admin-port
+      port: <admin-port>
+      targetPort: <admin-port>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: <org-name>-<orderer-name>
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: <org-name>-<orderer-name>
+  template:
+    metadata:
+      labels:
+        app: <org-name>-<orderer-name>
+    spec:
+      hostname: <org-name>-<orderer-name>-pod
+      containers:
+        - name: <org-name>-<orderer-name>
+          image: hyperledger/fabric-orderer:2.5
+          ports:
+            - containerPort: <ord-port>
+          volumeMounts:
+            - mountPath: /tmp/hyperledger/<org-name>/<orderer-name>
+              name: <org-name>-<orderer-name>-volume
+          workingDir: /opt/gopath/src/github.com/hyperledger/fabric/<org-name>/<orderer-name>
+          env:
+            - name: ORDERER_GENERAL_LISTENADDRESS
+              value: "<org-name>-<orderer-name>-pod"
+            - name: ORDERER_GENERAL_LISTENPORT
+              value: "<ord-port>"
+            - name: ORDERER_GENERAL_TLS_ENABLED
+              value: "true"
+            - name: ORDERER_GENERAL_TLS_PRIVATEKEY
+              value: "/tmp/hyperledger/<org-name>/<orderer-name>/tls/keystore/key.pem"
+            - name: ORDERER_GENERAL_TLS_CERTIFICATE
+              value: "/tmp/hyperledger/<org-name>/<orderer-name>/tls/signcerts/cert.pem"
+            - name: ORDERER_GENERAL_TLS_ROOTCAS
+              value: "/tmp/hyperledger/<org-name>/<orderer-name>/tls/cacerts/cert.pem"
+            - name: ORDERER_GENERAL_BOOTSTRAPMETHOD
+              value: "none"
+            - name: ORDERER_GENERAL_LOCALMSPDIR
+              value: "/tmp/hyperledger/<org-name>/<orderer-name>/msp"
+            - name: ORDERER_GENERAL_LOCALMSPID
+              value: "<org-name>-msp"
+            - name: ORDERER_FILELEDGER_LOCATION
+              value: "/tmp/hyperledger/<org-name>/<orderer-name>/ledger"
+            - name: ORDERER_CHANNELPARTICIPATION_ENABLED
+              value: "true"
+            - name: ORDERER_ADMIN_LISTENADDRESS
+              value: "<org-name>-<orderer-name>-pod:<admin-port>"
+            - name: ORDERER_ADMIN_TLS_ENABLED
+              value: "true"
+            - name: ORDERER_ADMIN_TLS_PRIVATEKEY
+              value: "/tmp/hyperledger/<org-name>/<orderer-name>/tls/keystore/key.pem"
+            - name: ORDERER_ADMIN_TLS_CERTIFICATE
+              value: "/tmp/hyperledger/<org-name>/<orderer-name>/tls/signcerts/cert.pem"
+            - name: ORDERER_ADMIN_TLS_CLIENTAUTHREQUIRED
+              value: "true"
+            - name: ORDERER_ADMIN_TLS_CLIENTROOTCAS
+              value: "/tmp/hyperledger/<org-name>/<orderer-name>/tls/cacerts/cert.pem"
+      volumes:
+        - name: <org-name>-<orderer-name>-volume
+          hostPath:
+            path: <orderer-dir>
+            type: Directory

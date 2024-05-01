@@ -1,7 +1,3 @@
 .git
 .idea
-
-chaincode/vendor
-chaincode/asset_*.tar.gz
-chaincode/code.tar.gz
-
+ccaas/vendor
