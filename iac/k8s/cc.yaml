@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: <cc-name>-<cc-version>
+spec:
+  type: LoadBalancer
+  selector:
+    app: <cc-name>-<cc-version>
+  ports:
+    - port: <cc-port>
+      targetPort: <cc-port>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: <cc-name>-<cc-version>
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: <cc-name>-<cc-version>
+  template:
+    metadata:
+      labels:
+        app: <cc-name>-<cc-version>
+    spec:
+      hostname: <cc-name>-<cc-version>-pod
+      containers:
+        - name: <cc-name>-<cc-version>
+          image: <cr-prefix>/<cc-name>:0.2
+          ports:
+            - containerPort: <cc-port>
+          env:
+            - name: CC_ID
+              value: "<package-id>"
+            - name: CC_SERVER_ADDRESS
+              value: "<cc-name>-<cc-version>-pod:<cc-port>"

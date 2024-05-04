@@ -11,17 +11,17 @@ import (
 
 func main() {
 	/* invoke chaincode as an external service */
-	log.Info(`starting chaincode as an external service (v0.7)`)
+	log.Info(`starting chaincode as an external service`)
 	assetCC, err := contractapi.NewChaincode(&asset.SmartContract{})
 	if err != nil {
 		log.Fatal(fmt.Sprintf(`creating chaincode failed - %v`, err))
 	}
 	log.Info(`chaincode is created for asset smart contract`)
 
-	ccId := os.Getenv(`CC_ID`)
+	ccID := os.Getenv(`CC_ID`)
 	ccAddr := os.Getenv(`CC_SERVER_ADDRESS`)
 	server := &shim.ChaincodeServer{
-		CCID:    ccId,
+		CCID:    ccID,
 		Address: ccAddr,
 		CC:      assetCC,
 		TLSProps: shim.TLSProperties{
@@ -29,7 +29,7 @@ func main() {
 		},
 	}
 
-	log.Info(fmt.Sprintf("chaincode is up and running at %s with ID: %s", ccAddr, ccId))
+	log.Info(fmt.Sprintf("chaincode is up and running at %s with ID: %s", ccAddr, ccID))
 	if err = server.Start(); err != nil {
 		log.Fatal(fmt.Sprintf("starting server failed - %s", err))
 	}

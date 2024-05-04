@@ -9,6 +9,14 @@ import (
 
 /* This is a sample chaincode implemented as per the Fabric documentation */
 
+var (
+	assets = []Asset{
+		{ID: 1, Color: "blue", Owner: "John Doe", Value: 500},
+		{ID: 2, Color: "red", Owner: "Jane Doe", Value: 600},
+		{ID: 3, Color: "yellow", Owner: "Bill", Value: 450},
+	}
+)
+
 type SmartContract struct {
 	contractapi.Contract
 }
@@ -22,12 +30,6 @@ type Asset struct {
 }
 
 func (s *SmartContract) InitLedger(ctx contractapi.TransactionContextInterface) error {
-	assets := []Asset{
-		{ID: 1, Color: "blue", Owner: "John Doe", Value: 500},
-		{ID: 2, Color: "red", Owner: "Jane Doe", Value: 600},
-		{ID: 3, Color: "yellow", Owner: "Bill", Value: 450},
-	}
-
 	for _, a := range assets {
 		aByts, err := json.Marshal(a)
 		if err != nil {

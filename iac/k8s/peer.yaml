@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: <org-name>-<peer-name>
+spec:
+  type: LoadBalancer
+  selector:
+    app: <org-name>-<peer-name>
+  ports:
+    - name: peer-port
+      port: <peer-port>
+      targetPort: <peer-port>
+    - name: operations-port
+      port: <op-port>
+      targetPort: <op-port>
+    - name: gossip-port
+      port: <gossip-port>
+      targetPort: <gossip-port>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: <org-name>-<peer-name>
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: <org-name>-<peer-name>
+  template:
+    metadata:
+      labels:
+        app: <org-name>-<peer-name>
+    spec:
+      hostname: <org-name>-<peer-name>-pod
+      containers:
+        - name: <org-name>-<peer-name>
+          image: hyperledger/fabric-peer:2.5
+          ports:
+            - containerPort: <peer-port>
+          volumeMounts:
+            - mountPath: /tmp/hyperledger/<org-name>/<peer-name>
+              name: <org-name>-<peer-name>-volume
+            - mountPath: /host/var/run
+              name: <org-name>-docker-volume
+            - mountPath: /tmp/hyperledger/<org-name>/admin/msp
+              name: <org-name>-admin-<peer-name>-volume
+            - mountPath: /etc/hyperledger/fabric/core.yaml
+              name: <org-name>-<peer-name>-core-volume
+            - mountPath: /opt/hyperledger/ccaas_builder
+              name: buildpack-volume
+          workingDir: /opt/gopath/src/github.com/hyperledger/fabric/<org-name>/<peer-name>
+          env:
+            - name: CORE_PEER_ID
+              value: "<org-name>-<peer-name>"
+            - name: CORE_PEER_ADDRESS
+              value: "<org-name>-<peer-name>-pod:<peer-port>"
+            - name: CORE_PEER_LOCALMSPID
+              value: "<org-name>-msp"
+            - name: CORE_PEER_MSPCONFIGPATH
+              value: "/tmp/hyperledger/<org-name>/<peer-name>/msp"
+            - name: CORE_PEER_TLS_ENABLED
+              value: "true"
+            - name: CORE_PEER_TLS_CERT_FILE
+              value: "/tmp/hyperledger/<org-name>/<peer-name>/tls/signcerts/cert.pem"
+            - name: CORE_PEER_TLS_KEY_FILE
+              value: "/tmp/hyperledger/<org-name>/<peer-name>/tls/keystore/key.pem"
+            - name: CORE_PEER_TLS_ROOTCERT_FILE
+              value: "/tmp/hyperledger/<org-name>/<peer-name>/tls/cacerts/cert.pem"
+            - name: CORE_PEER_GOSSIP_USELEADERELECTION
+              value: "true"
+            - name: CORE_PEER_GOSSIP_ORGLEADER
+              value: "false"
+            - name: CORE_PEER_GOSSIP_EXTERNALENDPOINT
+              value: "<org-name>-<peer-name>-pod:<gossip-port>"
+            - name: CORE_OPERATIONS_LISTENADDRESS
+              value: "<org-name>-<peer-name>-pod:<op-port>"
+            - name: CORE_OPERATIONS_TLS_ENABLED
+              value: "false"
+            - name: FABRIC_CFG_PATH
+              value: "/tmp/hyperledger/<org-name>/<peer-name>/config"
+            - name: CORE_VM_ENDPOINT
+              value: "unix:///host/var/run/docker.sock"
+      volumes:
+        - name: <org-name>-<peer-name>-volume
+          hostPath:
+            path: <peer-dir>
+            type: Directory
+        - name: <org-name>-admin-<peer-name>-volume
+          hostPath:
+            path: <admin-dir>/msp
+            type: Directory
+        - name: <org-name>-docker-volume
+          hostPath:
+            path: /var/run
+            type: Directory
+        - name: <org-name>-<peer-name>-core-volume
+          hostPath:
+            path: <core-path>
+            type: File
+        - name: buildpack-volume
+          hostPath:
+            path: <build-path>
+            type: Directory
