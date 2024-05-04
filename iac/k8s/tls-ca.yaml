@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: org1-tls-ca
+  name: <org-name>-tls-ca
 spec:
   type: LoadBalancer
   selector:
@@ -44,7 +44,7 @@ spec:
             - name: FABRIC_CA_SERVER_DEBUG
               value: "true"
           command: ["sh"]
-          args: ["-c", "fabric-ca-server start -d -b <admin-user>-<org-name>-tls-ca:<admin-pw> --port <port>"]
+          args: ["-c", "fabric-ca-server start -d -b <admin-user>:<admin-pw> --port <port>"]
       volumes:
         - name: <org-name>-tls-ca-volume
           hostPath:
