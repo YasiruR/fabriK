@@ -1,10 +1,10 @@
-# Hyperledger Fabric Infrastructure as Code (IaC)
+# FabriK
 
-The IaC repository contains bash scripts and corresponding [Kubernetes](https://kubernetes.io/) manifest files to
-automate
-the deployment of [Hyperledger Fabric](https://www.hyperledger.org/projects/fabric) components in Unix-like
-environments. This documentation
-provides the steps to deploy a minimal working Fabric network using the resources in the repository.
+FabriK provides resources to deploy [Hyperledger Fabric](https://www.hyperledger.org/projects/fabric) on [Kubernetes](https://kubernetes.io/).
+
+This IaC repository contains bash scripts and corresponding Kubernetes manifest files to
+automate the deployment of Hyperledger Fabric components in Unix-like
+environments. The documentation provides the steps to deploy a minimal working Fabric network using the resources in this repository.
 
 Please refer to the [quickstart](#quickstart) for convenient and faster deployment of a network, which
 will be carried out through the automation scripts.
