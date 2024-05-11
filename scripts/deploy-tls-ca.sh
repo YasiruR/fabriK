@@ -1,7 +1,7 @@
 #!/bin/bash
 
 log_prefix='--->'
-sleep_s=15
+sleep_s=20
 
 hostname=""
 hfb_dir=""
@@ -41,7 +41,7 @@ Flags:
   -m: file path of the TLS CA manifest [if not specified, a new manifest will be generated]
   -o: organization name [optional, default: org]
   -p: admin user password [optional, default: adminpw]
-  -s: service name of TLS CA [optional, default: tls-ca]
+  -s: Kubernetes service name of TLS CA [optional, default: tls-ca]
   -u: admin username [optional, default: admin]
   -v: Fabric CA client binary version [optional, default: v1.5.9]
   "
@@ -83,8 +83,8 @@ tls_ca_path="$hfb_dir/tls-ca"
 
 # create manifest if not provided explicitly
 if [ "$tls_manifest_path" == "" ]; then
-  mkdir -p manifests
-  tls_manifest_path="$(pwd)/manifests"
+  mkdir -p "$hfb_dir"/manifests
+  tls_manifest_path="$hfb_dir/manifests/$org_name-tls-ca.yaml"
   # shellcheck disable=SC2217
   echo -e "apiVersion: v1
 kind: Service
@@ -137,7 +137,7 @@ spec:
         - name: $tls_ca_svc-volume
           hostPath:
             path: $hfb_dir/tls-ca/server
-            type: Directory" > "$tls_manifest_path"/tls-ca.yaml
+            type: Directory" > "$tls_manifest_path"
 fi
 
 log() {
@@ -190,8 +190,8 @@ log "$tls_ca_svc service is running on port $tls_ca_port"
 "$hfb_dir"/ca-client/fabric-ca-client enroll -d -u "https://$tls_admin:$tls_admin_pw@$hostname:$tls_ca_port" --mspdir "$tls_ca_path/admin/msp"
 
 # copy tls root cert to client directory
-mkdir -p /root/hfb/ca-client/tls-root-cert/
-cp /root/hfb/tls-ca/root-cert/tls-ca-cert.pem /root/hfb/ca-client/tls-root-cert/
+mkdir -p "$hfb_dir"/ca-client/tls-root-cert/
+cp "$hfb_dir"/tls-ca/root-cert/tls-ca-cert.pem "$hfb_dir"/ca-client/tls-root-cert/
 
 log "registered and enrolled the admin user for TLS CA (ID: $tls_admin, password: $tls_admin_pw)"
 log "TLS CA is deployed successfully"
