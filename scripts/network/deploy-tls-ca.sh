@@ -1,7 +1,7 @@
 #!/bin/bash
 
 log_prefix='--->'
-sleep_s=20
+sleep_s='10'
 
 hostname=""
 hfb_dir=""
@@ -14,7 +14,7 @@ tls_admin=""
 ca_client_version=""
 
 # read args
-while getopts 'a:d:hm:o:p:s:u:v:' flag; do
+while getopts 'a:d:hm:o:p:s:t:u:v:' flag; do
   case "${flag}" in
     a) hostname="${OPTARG}" ;;
     d) hfb_dir="${OPTARG}" ;;
@@ -22,7 +22,8 @@ while getopts 'a:d:hm:o:p:s:u:v:' flag; do
     m) tls_manifest_path="${OPTARG}" ;;
     o) org_name="${OPTARG}" ;;
     p) tls_admin_pw="${OPTARG}" ;;
-    s) tls_ca_svc="${OPTARG}" ;;
+    s) sleep_s="${OPTARG}" ;;
+    t) tls_ca_svc="${OPTARG}" ;;
     u) tls_admin="${OPTARG}" ;;
     v) ca_client_version="${OPTARG}" ;;
     *) exit 1 ;;
@@ -41,7 +42,8 @@ Flags:
   -m: file path of the TLS CA manifest [if not specified, a new manifest will be generated]
   -o: organization name [optional, default: org]
   -p: admin user password [optional, default: adminpw]
-  -s: Kubernetes service name of TLS CA [optional, default: tls-ca]
+  -s: sleep buffer in seconds [default: 10]
+  -t: Kubernetes service name of TLS CA [optional, default: tls-ca]
   -u: admin username [optional, default: admin]
   -v: Fabric CA client binary version [optional, default: v1.5.9]
   "
@@ -147,7 +149,7 @@ log() {
 # setup TLS server
 {
 mkdir -p "$tls_ca_path/server"
-kubectl apply -f "$tls_manifest_path" && log "TLS CA manifest is being deployed..." && sleep $sleep_s && log "kubernetes service (name: $tls_ca_svc) has been created for TLS CA"
+kubectl apply -f "$tls_manifest_path" && log "TLS CA manifest is being deployed..." && sleep "$sleep_s" && log "kubernetes service (name: $tls_ca_svc) has been created for TLS CA"
 } &&
 {
 # copy tls root certificate to root-cert directory
@@ -163,6 +165,7 @@ if [[ $(dpkg -l | grep wget | wc -l) == 0 ]]; then
 	apt install wget  > /dev/null
 fi
 
+# todo change directory to bin
 # download client binary to client directory and extract
 if [ ! -f "$hfb_dir/ca-client/fabric-ca-client" ];
 then
@@ -172,7 +175,7 @@ then
 	tar -xzvf "hyperledger-fabric-ca-linux-amd64-$ca_client_version.tar.gz" &&
 	mv bin/fabric-ca-client . &&
 	rm -r bin/ &&
-	rm hyperledger-fabric-ca-linux-amd64-1.5.9.tar.gz &&
+	rm "hyperledger-fabric-ca-linux-amd64-$ca_client_version.tar.gz" &&
 	log "Fabric CA client v$ca_client_version binary was installed"
 	cd ..
 else

@@ -9,7 +9,7 @@
 #     d. Update host and port of TLS CA
 
 log_prefix='--->'
-sleep_s=10
+sleep_s='10'
 ca_client_version='1.5.9'
 
 log() {
@@ -32,7 +32,7 @@ rcert_path_global=''
 
 # read args
 tls_local=0
-while getopts 'a:d:e:f:hi:lm:o:p:r:t:u:' flag; do
+while getopts 'a:d:e:f:hi:lm:o:p:r:s:t:u:' flag; do
   case "${flag}" in
     a) admin_path="${OPTARG}" ;;
     d) tls_admin_path="${OPTARG}" ;;
@@ -45,6 +45,7 @@ while getopts 'a:d:e:f:hi:lm:o:p:r:t:u:' flag; do
     o) org_name="${OPTARG}" ;;
     p) org_admin_pw="${OPTARG}" ;;
     r) rcert_path_global="${OPTARG}" ;;
+    s) sleep_s="${OPTARG}" ;;
     t) tls_ca_host="${OPTARG}" ;;
     u) org_admin="${OPTARG}" ;;
     *) exit 1 ;;
@@ -68,6 +69,7 @@ Flags:
   o: organization name [optional, default: org]
   p: admin user password [optional, default: adminpw]
   r: file path of TLS root certificate [must be provided if -l is not used]
+  s: sleep buffer in seconds [default: 10]
   t: TLS CA server hostname or IP address [must be provided if -l is not used]
   u: admin username [optional, default: admin-org]
   "
@@ -191,7 +193,7 @@ then
 	tar -xzvf "hyperledger-fabric-ca-linux-amd64-$ca_client_version.tar.gz" &&
 	mv bin/fabric-ca-client . &&
 	rm -r bin/ &&
-	rm hyperledger-fabric-ca-linux-amd64-1.5.9.tar.gz &&
+	rm "hyperledger-fabric-ca-linux-amd64-$ca_client_version.tar.gz" &&
 	log "Fabric CA client v$ca_client_version binary was installed"
 	cd ..
 else
@@ -237,7 +239,7 @@ cp -r "$admin_path/tls/signcerts" "$hfb_path/$org_name/ca/server/tls/"
 keyfile=$(ls "$admin_path/tls/keystore/")
 mkdir -p "$hfb_path/$org_name/ca/server/tls/keystore"
 cp "$admin_path/tls/keystore/$keyfile" "$hfb_path/$org_name/ca/server/tls/keystore/key.pem"
-kubectl apply -f "$org_ca_manifest_path" && log "organization CA manifest is being deployed..." && sleep $sleep_s && log "kubernetes service (name: $org_ca_svc) has been created for the CA of $org_name"
+kubectl apply -f "$org_ca_manifest_path" && log "organization CA manifest is being deployed..." && sleep "$sleep_s" && log "kubernetes service (name: $org_ca_svc) has been created for the CA of $org_name"
 
 # enroll org admin user with org CA
 log "enrolling organization admin user with organization CA server"
@@ -250,16 +252,16 @@ log "creating NodeOU for the admin user"
 printf "NodeOUs:
   Enable: true
   ClientOUIdentifier:
-    Certificate: \"$org_ca_host-$org_ca_port\"
+    Certificate: cacerts/$org_ca_host-$org_ca_port.pem
     OrganizationalUnitIdentifier: client
   PeerOUIdentifier:
-    Certificate: \"$org_ca_host-$org_ca_port\"
+    Certificate: cacerts/$org_ca_host-$org_ca_port.pem
     OrganizationalUnitIdentifier: peer
   AdminOUIdentifier:
-    Certificate: \"$org_ca_host-$org_ca_port\"
+    Certificate: cacerts/$org_ca_host-$org_ca_port.pem
     OrganizationalUnitIdentifier: admin
   OrdererOUIdentifier:
-    Certificate: \"$org_ca_host-$org_ca_port\"
+    Certificate: cacerts/$org_ca_host-$org_ca_port.pem
     OrganizationalUnitIdentifier: orderer
 " > "$admin_path/msp/config.yaml"
 

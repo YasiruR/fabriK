@@ -1,7 +1,7 @@
 #!/bin/bash
 
 log_prefix='--->'
-sleep_s=10
+sleep_s='10'
 ca_client_version='1.5.9'
 port=7051
 
@@ -13,7 +13,7 @@ org_ca_host=''
 org_ca_port=''
 
 # fabric configs
-org_name=''
+org_name='org'
 peer_name='peer0'
 peer_pw='peerpw'
 
@@ -32,7 +32,7 @@ log() {
 tls_local=0
 org_local=0
 help=0
-while getopts 'a:c:d:e:f:hl:m:o:p:r:t:u:' flag; do
+while getopts 'a:c:d:e:f:hl:m:o:p:r:s:t:u:' flag; do
   case "${flag}" in
     a) host="${OPTARG}" ;;
     c) org_ca_host="${OPTARG}" ;;
@@ -45,6 +45,7 @@ while getopts 'a:c:d:e:f:hl:m:o:p:r:t:u:' flag; do
     o) org_name="${OPTARG}" ;;
     p) peer_pw="${OPTARG}" ;;
     r) tls_ca_port="${OPTARG}" ;;
+    s) sleep_s="${OPTARG}" ;;
     t) tls_ca_host="${OPTARG}" ;;
     u) peer_name="${OPTARG}" ;;
     *) exit 1 ;;
@@ -67,6 +68,7 @@ if [[ $help == 1 ]]; then
     o: organization name [optional, default: org]
     p: password of peer user [optional, default: $peer_pw]
     r: port of TLS CA [must be provided if TLS CA does not locally exist]
+    s: sleep buffer in seconds [default: 10]
     t: hostname of TLS CA [must be provided if TLS CA does not locally exist]
     u: username of peer [optional, default: $peer_name]
 
@@ -104,7 +106,7 @@ then
 	tar -xzvf "hyperledger-fabric-ca-linux-amd64-$ca_client_version.tar.gz" &&
 	mv bin/fabric-ca-client . &&
 	rm -r bin/ &&
-	rm hyperledger-fabric-ca-linux-amd64-1.5.9.tar.gz &&
+	rm "hyperledger-fabric-ca-linux-amd64-$ca_client_version.tar.gz" &&
 	log "Fabric CA client v$ca_client_version binary was installed"
 	cd ..
 else
@@ -160,16 +162,16 @@ log "creating NodeOU for the peer user"
 printf "NodeOUs:
   Enable: true
   ClientOUIdentifier:
-    Certificate: \"cacerts/$org_ca_host-$org_ca_port.pem\"
+    Certificate: cacerts/$org_ca_host-$org_ca_port.pem
     OrganizationalUnitIdentifier: client
   PeerOUIdentifier:
-    Certificate: \"cacerts/$org_ca_host-$org_ca_port.pem\"
+    Certificate: cacerts/$org_ca_host-$org_ca_port.pem
     OrganizationalUnitIdentifier: peer
   AdminOUIdentifier:
-    Certificate: \"cacerts/$org_ca_host-$org_ca_port.pem\"
+    Certificate: cacerts/$org_ca_host-$org_ca_port.pem
     OrganizationalUnitIdentifier: admin
   OrdererOUIdentifier:
-    Certificate: \"cacerts/$org_ca_host-$org_ca_port.pem\"
+    Certificate: cacerts/$org_ca_host-$org_ca_port.pem
     OrganizationalUnitIdentifier: orderer" > "$hfb_path/$org_name/peers/$peer_name/msp/config.yaml"
 
 # enroll peer identity with TLS and organization CA servers
@@ -280,4 +282,4 @@ fi
 
 # deploy peer
 log "deploying peer service"
-kubectl apply -f "$peer_manifest_path" && log "peer manifest is being deployed..." && sleep $sleep_s && log "kubernetes service is created for peer ($peer_name)"
+kubectl apply -f "$peer_manifest_path" && log "peer manifest is being deployed..." && sleep "$sleep_s" && log "kubernetes service is created for peer ($peer_name)"
