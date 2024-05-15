@@ -1,7 +1,7 @@
 #!/bin/bash
 
 log_prefix='--->'
-sleep_s=15
+sleep_s='10'
 
 hostname=""
 hfb_dir=""
@@ -14,7 +14,7 @@ tls_admin=""
 ca_client_version=""
 
 # read args
-while getopts 'a:d:hm:o:p:s:u:v:' flag; do
+while getopts 'a:d:hm:o:p:s:t:u:v:' flag; do
   case "${flag}" in
     a) hostname="${OPTARG}" ;;
     d) hfb_dir="${OPTARG}" ;;
@@ -22,7 +22,8 @@ while getopts 'a:d:hm:o:p:s:u:v:' flag; do
     m) tls_manifest_path="${OPTARG}" ;;
     o) org_name="${OPTARG}" ;;
     p) tls_admin_pw="${OPTARG}" ;;
-    s) tls_ca_svc="${OPTARG}" ;;
+    s) sleep_s="${OPTARG}" ;;
+    t) tls_ca_svc="${OPTARG}" ;;
     u) tls_admin="${OPTARG}" ;;
     v) ca_client_version="${OPTARG}" ;;
     *) exit 1 ;;
@@ -41,7 +42,8 @@ Flags:
   -m: file path of the TLS CA manifest [if not specified, a new manifest will be generated]
   -o: organization name [optional, default: org]
   -p: admin user password [optional, default: adminpw]
-  -s: service name of TLS CA [optional, default: tls-ca]
+  -s: sleep buffer in seconds [default: 10]
+  -t: Kubernetes service name of TLS CA [optional, default: tls-ca]
   -u: admin username [optional, default: admin]
   -v: Fabric CA client binary version [optional, default: v1.5.9]
   "
@@ -80,11 +82,12 @@ if [ "$tls_ca_svc" == "" ]; then
 fi
 
 tls_ca_path="$hfb_dir/tls-ca"
+ca_client_dir="$hfb_dir/clients/ca"
 
 # create manifest if not provided explicitly
 if [ "$tls_manifest_path" == "" ]; then
-  mkdir -p manifests
-  tls_manifest_path="$(pwd)/manifests"
+  mkdir -p "$hfb_dir"/manifests
+  tls_manifest_path="$hfb_dir/manifests/$org_name-tls-ca.yaml"
   # shellcheck disable=SC2217
   echo -e "apiVersion: v1
 kind: Service
@@ -137,7 +140,7 @@ spec:
         - name: $tls_ca_svc-volume
           hostPath:
             path: $hfb_dir/tls-ca/server
-            type: Directory" > "$tls_manifest_path"/tls-ca.yaml
+            type: Directory" > "$tls_manifest_path"
 fi
 
 log() {
@@ -147,7 +150,7 @@ log() {
 # setup TLS server
 {
 mkdir -p "$tls_ca_path/server"
-kubectl apply -f "$tls_manifest_path" && log "TLS CA manifest is being deployed..." && sleep $sleep_s && log "kubernetes service (name: $tls_ca_svc) has been created for TLS CA"
+kubectl apply -f "$tls_manifest_path" && log "TLS CA manifest is being deployed..." && sleep "$sleep_s" && log "kubernetes service (name: $tls_ca_svc) has been created for TLS CA"
 } &&
 {
 # copy tls root certificate to root-cert directory
@@ -163,16 +166,17 @@ if [[ $(dpkg -l | grep wget | wc -l) == 0 ]]; then
 	apt install wget  > /dev/null
 fi
 
+# todo change directory to bin
 # download client binary to client directory and extract
-if [ ! -f "$hfb_dir/ca-client/fabric-ca-client" ];
+if [ ! -f "$ca_client_dir/fabric-ca-client" ];
 then
-	mkdir -p "$hfb_dir/ca-client" &&
-	cd "$hfb_dir/ca-client" &&
+	mkdir -p "$ca_client_dir" &&
+	cd "$ca_client_dir" &&
 	wget "https://github.com/hyperledger/fabric-ca/releases/download/v$ca_client_version/hyperledger-fabric-ca-linux-amd64-$ca_client_version.tar.gz" &&
 	tar -xzvf "hyperledger-fabric-ca-linux-amd64-$ca_client_version.tar.gz" &&
 	mv bin/fabric-ca-client . &&
 	rm -r bin/ &&
-	rm hyperledger-fabric-ca-linux-amd64-1.5.9.tar.gz &&
+	rm "hyperledger-fabric-ca-linux-amd64-$ca_client_version.tar.gz" &&
 	log "Fabric CA client v$ca_client_version binary was installed"
 	cd ..
 else
@@ -181,17 +185,17 @@ fi
 
 # set env variables for client
 export FABRIC_CA_CLIENT_TLS_CERTFILES="$tls_ca_path/root-cert/tls-ca-cert.pem"
-export FABRIC_CA_CLIENT_HOME="$hfb_dir/ca-client"
+export FABRIC_CA_CLIENT_HOME="$ca_client_dir"
 
 # enroll TLS CA admin
 mkdir -p "$tls_ca_path/admin/msp"
 tls_ca_port="$(kubectl get svc $tls_ca_svc | awk 'FNR == 2 {print $5}' | sed -e "s/^.*://" -e "s/\/TCP//")"
 log "$tls_ca_svc service is running on port $tls_ca_port"
-"$hfb_dir"/ca-client/fabric-ca-client enroll -d -u "https://$tls_admin:$tls_admin_pw@$hostname:$tls_ca_port" --mspdir "$tls_ca_path/admin/msp"
+"$hfb_dir"/clients/ca/fabric-ca-client enroll -d -u "https://$tls_admin:$tls_admin_pw@$hostname:$tls_ca_port" --mspdir "$tls_ca_path/admin/msp"
 
 # copy tls root cert to client directory
-mkdir -p /root/hfb/ca-client/tls-root-cert/
-cp /root/hfb/tls-ca/root-cert/tls-ca-cert.pem /root/hfb/ca-client/tls-root-cert/
+mkdir -p "$hfb_dir"/clients/ca/tls-root-cert/
+cp "$hfb_dir"/tls-ca/root-cert/tls-ca-cert.pem "$hfb_dir"/clients/ca/tls-root-cert/
 
 log "registered and enrolled the admin user for TLS CA (ID: $tls_admin, password: $tls_admin_pw)"
 log "TLS CA is deployed successfully"
