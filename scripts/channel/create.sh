@@ -10,7 +10,8 @@ chan_name='chan0'
 ord_name='ord0'
 osn_admin='osnadmin'
 osn_admin_pw='adminpw'
-ord_svc="$org_name-$ord_name"
+ord_svc="$org_name-$ord_name"   # should be changed in case different
+tls_svc="$org_name-tls-ca"      # should be changed in case different
 
 # network config
 host=''
@@ -50,9 +51,16 @@ if [ "$tls_host" == '' ]; then
   tls_host="$host"
 fi
 
+client_dir="$hfb_dir/clients"
+
 log() {
 	echo "$log_prefix $1"
 }
+
+# parse tls port if local
+if [ "$tls_port" == '' ]; then
+  tls_port="$(kubectl get svc $tls_svc | awk 'FNR == 2 {print $5}' | sed -e "s/^.*://" -e "s/\/TCP//")"
+fi
 
 # parse orderer information
 tmp_list="$(kubectl get svc "$ord_svc" | awk 'FNR == 2 {print $5}')"
@@ -65,22 +73,22 @@ for p in "${tmp_ports[@]}"; do
       ord_admin_external_port="$(echo $p | sed -e "s/^.*://" -e "s/\/TCP//")"
     fi
 done
-log "orderer external port: $ord_external_port"
-log "orderer admin external port: $ord_external_port"
+
+log "orderer is running on $ord_external_ip:$ord_external_port (cluster port: $ord_cluster_port)"
+log "TLS CA server is running on $tls_host:$tls_port"
 
 # generate configtx.yaml
-mkdir -p "$hfb_dir/config"
+mkdir -p "$hfb_dir/config/$chan_name"
 bash generate-configtx.sh "$org_name" "$ord_svc" "$ord_cluster_port" "$ord_external_ip" "$ord_external_port" "$ord_cert" "$org_admin_msp" "$hfb_dir/config"
-log "generated configtx.yaml in $hfb_dir/config"
 
 # download configtxgen tool
-if [ ! -f "$hfb_dir/bin/configtxgen" ];
+if [ ! -f "$client_dir/chan/configtxgen" ];
 then
-	mkdir -p "$hfb_dir" &&
-	cd "$hfb_dir" &&
+  mkdir -p "$client_dir/chan" &&
+	cd "$client_dir/chan" &&
 	wget "https://github.com/hyperledger/fabric/releases/download/v$bin_version/hyperledger-fabric-linux-amd64-$bin_version.tar.gz" &&
 	tar -xzvf "hyperledger-fabric-linux-amd64-$bin_version.tar.gz" &&
-	mv bin bintmp && mkdir -p bin && mv bintmp/configtxgen bintmp/osnadmin bin/ && rm -r bintmp/ &&
+	mv bin/configtxgen bin/osnadmin . && rm -r bin/ &&
 	rm -r config/ &&
 	rm -r builders/ &&
 	rm "hyperledger-fabric-linux-amd64-$bin_version.tar.gz" &&
@@ -91,20 +99,19 @@ fi
 
 # set env var
 export FABRIC_CFG_PATH="$hfb_dir/config"
-export PATH=$PATH:"$hfb_dir/bin"
+export PATH=$PATH:"$client_dir/chan"
 log "Fabric config env var: $FABRIC_CFG_PATH"
 log "Path var: $PATH"
 
 # create genesis block
 log "creating genesis block for $chan_name"
-mkdir -p "$hfb_dir/$org_name/$chan_name"
 configtxgen -profile AppChanEtcdRaft -outputBlock "$hfb_dir/config/$chan_name/genesis_block.pb" -channelID "$chan_name"
 
 # download client binary to client directory and extract
-if [ ! -f "$hfb_dir/ca-client/fabric-ca-client" ];
+if [ ! -f "$client_dir/ca/fabric-ca-client" ];
 then
-	mkdir -p "$hfb_dir/ca-client" &&
-	cd "$hfb_dir/ca-client" &&
+	mkdir -p "$client_dir/ca" &&
+	cd "$client_dir/ca" &&
 	wget "https://github.com/hyperledger/fabric-ca/releases/download/v$ca_client_version/hyperledger-fabric-ca-linux-amd64-$ca_client_version.tar.gz" &&
 	tar -xzvf "hyperledger-fabric-ca-linux-amd64-$ca_client_version.tar.gz" &&
 	mv bin/fabric-ca-client . &&
@@ -117,16 +124,16 @@ else
 fi
 
 # set env variables for client (todo)
-export FABRIC_CA_CLIENT_TLS_CERTFILES="$hfb_dir/ca-client/tls-root-cert/tls-ca-cert.pem"
-export FABRIC_CA_CLIENT_HOME="$hfb_dir/ca-client"
+export FABRIC_CA_CLIENT_TLS_CERTFILES="$client_dir/ca/tls-root-cert/tls-ca-cert.pem"
+export FABRIC_CA_CLIENT_HOME="$client_dir/ca"
 
 # create TLS root certificate under org admin
 mkdir -p "$hfb_dir/$org_name/ca/admin/msp/tlscacerts"
-cp "$hfb_dir/ca-client/tls-root-cert/tls-ca-cert.pem" "$hfb_dir/$org_name/ca/admin/msp/tlscacerts/"
+cp "$client_dir/ca/tls-root-cert/tls-ca-cert.pem" "$hfb_dir/$org_name/ca/admin/msp/tlscacerts/"
 
 # create OSN admin dir
 mkdir -p "$osn_tls_dir"
-cd "$hfb_dir/ca-client" || exit
+cd "$client_dir/ca" || exit
 
 # generate TLS certs and MSP for admin
 log "registering OSN admin with TLS server"

@@ -83,20 +83,20 @@ logSuccess() {
 if [ $remove == 0 ]; then
   mkdir -p "$hfb_dir"
   log "initializing TLS CA deployment..."
-  bash ./network/deploy-tls-ca.sh -a "$hostname" -d "$hfb_dir" -o "$org_name" && sleep $sleep_s
+  bash ./network/deploy-tls-ca.sh -a "$hostname" -d "$hfb_dir" -o "$org_name" -s "$sleep_s"
   log "initializing organization CA deployment..."
-  bash ./network/deploy-org-ca.sh -i "$hostname" -l -d "$hfb_dir"/tls-ca/admin/msp -o "$org_name" && sleep $sleep_s
+  bash ./network/deploy-org-ca.sh -i "$hostname" -l -d "$hfb_dir"/tls-ca/admin/msp -o "$org_name" -s "$sleep_s"
 
   for (( i=0; i<$n_peers; i++ ))
   do
     log "initializing peer$i deployment..."
-    bash ./network/deploy-peer.sh -a "$hostname" -d "$hfb_dir"/"$org_name"/ca/admin/msp -l "$hfb_dir"/tls-ca/admin/msp -u "peer$i" -o "$org_name" && sleep $sleep_s
+    bash ./network/deploy-peer.sh -a "$hostname" -d "$hfb_dir"/"$org_name"/ca/admin/msp -l "$hfb_dir"/tls-ca/admin/msp -u "peer$i" -o "$org_name" -s "$sleep_s"
   done
 
   for (( i=0; i<$n_ords; i++ ))
   do
     log "initializing ord$i deployment..."
-    bash ./network/deploy-orderer.sh -a "$hostname" -d "$hfb_dir"/"$org_name"/ca/admin/msp -l "$hfb_dir"/tls-ca/admin/msp -u "ord$i" -o "$org_name" && sleep $sleep_s
+    bash ./network/deploy-orderer.sh -a "$hostname" -d "$hfb_dir"/"$org_name"/ca/admin/msp -l "$hfb_dir"/tls-ca/admin/msp -u "ord$i" -o "$org_name" -s "$sleep_s"
   done
   logSuccess
   exit 0

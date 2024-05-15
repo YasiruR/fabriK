@@ -82,6 +82,7 @@ if [ "$tls_ca_svc" == "" ]; then
 fi
 
 tls_ca_path="$hfb_dir/tls-ca"
+ca_client_dir="$hfb_dir/clients/ca"
 
 # create manifest if not provided explicitly
 if [ "$tls_manifest_path" == "" ]; then
@@ -167,10 +168,10 @@ fi
 
 # todo change directory to bin
 # download client binary to client directory and extract
-if [ ! -f "$hfb_dir/ca-client/fabric-ca-client" ];
+if [ ! -f "$ca_client_dir/fabric-ca-client" ];
 then
-	mkdir -p "$hfb_dir/ca-client" &&
-	cd "$hfb_dir/ca-client" &&
+	mkdir -p "$ca_client_dir" &&
+	cd "$ca_client_dir" &&
 	wget "https://github.com/hyperledger/fabric-ca/releases/download/v$ca_client_version/hyperledger-fabric-ca-linux-amd64-$ca_client_version.tar.gz" &&
 	tar -xzvf "hyperledger-fabric-ca-linux-amd64-$ca_client_version.tar.gz" &&
 	mv bin/fabric-ca-client . &&
@@ -184,17 +185,17 @@ fi
 
 # set env variables for client
 export FABRIC_CA_CLIENT_TLS_CERTFILES="$tls_ca_path/root-cert/tls-ca-cert.pem"
-export FABRIC_CA_CLIENT_HOME="$hfb_dir/ca-client"
+export FABRIC_CA_CLIENT_HOME="$ca_client_dir"
 
 # enroll TLS CA admin
 mkdir -p "$tls_ca_path/admin/msp"
 tls_ca_port="$(kubectl get svc $tls_ca_svc | awk 'FNR == 2 {print $5}' | sed -e "s/^.*://" -e "s/\/TCP//")"
 log "$tls_ca_svc service is running on port $tls_ca_port"
-"$hfb_dir"/ca-client/fabric-ca-client enroll -d -u "https://$tls_admin:$tls_admin_pw@$hostname:$tls_ca_port" --mspdir "$tls_ca_path/admin/msp"
+"$hfb_dir"/clients/ca/fabric-ca-client enroll -d -u "https://$tls_admin:$tls_admin_pw@$hostname:$tls_ca_port" --mspdir "$tls_ca_path/admin/msp"
 
 # copy tls root cert to client directory
-mkdir -p "$hfb_dir"/ca-client/tls-root-cert/
-cp "$hfb_dir"/tls-ca/root-cert/tls-ca-cert.pem "$hfb_dir"/ca-client/tls-root-cert/
+mkdir -p "$hfb_dir"/clients/ca/tls-root-cert/
+cp "$hfb_dir"/tls-ca/root-cert/tls-ca-cert.pem "$hfb_dir"/clients/ca/tls-root-cert/
 
 log "registered and enrolled the admin user for TLS CA (ID: $tls_admin, password: $tls_admin_pw)"
 log "TLS CA is deployed successfully"

@@ -96,12 +96,13 @@ if [ "$org_name" == '' ]; then
 fi
 
 peer_svc="$org_name-$peer_name"
+ca_client_dir="$hfb_path/clients/ca"
 
 # download client binary to client directory and extract
-if [ ! -f "$hfb_path/ca-client/fabric-ca-client" ];
+if [ ! -f "$ca_client_dir/fabric-ca-client" ];
 then
-	mkdir -p "$hfb_path/ca-client" &&
-	cd "$hfb_path/ca-client" &&
+	mkdir -p "$ca_client_dir" &&
+	cd "$ca_client_dir" &&
 	wget "https://github.com/hyperledger/fabric-ca/releases/download/v$ca_client_version/hyperledger-fabric-ca-linux-amd64-$ca_client_version.tar.gz" &&
 	tar -xzvf "hyperledger-fabric-ca-linux-amd64-$ca_client_version.tar.gz" &&
 	mv bin/fabric-ca-client . &&
@@ -115,22 +116,22 @@ fi
 
 # setup TLS root certificate for client binary
 log "setting up TLS root certificate"
-if [ ! -d "$hfb_path/ca-client/tls-root-cert" ];
+if [ ! -d "$ca_client_dir/tls-root-cert" ];
 then
-  mkdir -p "$hfb_path/ca-client/tls-root-cert"
+  mkdir -p "$ca_client_dir/tls-root-cert"
 fi
 
-if [ ! -f "$hfb_path/ca-client/tls-root-cert/$rcert_file" ];
+if [ ! -f "$ca_client_dir/tls-root-cert/$rcert_file" ];
 then
-  cp "$rcert_path_global/$rcert_file" "$hfb_path/ca-client/tls-root-cert/$rcert_file"
+  cp "$rcert_path_global/$rcert_file" "$ca_client_dir/tls-root-cert/$rcert_file"
   log "copied TLS root certificate to organization"
 else
-  log "TLS root certificate already exists in $hfb_path/ca-client/tls-root-cert/$rcert_file"
+  log "TLS root certificate already exists in $ca_client_dir/tls-root-cert/$rcert_file"
 fi
 
 # set env variables for client
-export FABRIC_CA_CLIENT_TLS_CERTFILES="$hfb_path/ca-client/tls-root-cert/$rcert_file"
-export FABRIC_CA_CLIENT_HOME="$hfb_path/ca-client"
+export FABRIC_CA_CLIENT_TLS_CERTFILES="$ca_client_dir/tls-root-cert/$rcert_file"
+export FABRIC_CA_CLIENT_HOME="$ca_client_dir"
 
 # create peer directory
 mkdir -p "$hfb_path/$org_name/peers/$peer_name/msp"
@@ -142,11 +143,11 @@ if [ $tls_local == 1 ]; then
   tls_ca_host=$host
   tls_ca_port="$(kubectl get svc "$org_name-tls-ca" | awk 'FNR == 2 {print $5}' | sed -e "s/^.*://" -e "s/\/TCP//")"
   log "TLS CA server is running on $tls_ca_host:$tls_ca_port"
-  "$hfb_path"/ca-client/fabric-ca-client register -d --id.name "$peer_name" --id.secret "$peer_pw" --id.type peer -u "https://$tls_ca_host:$tls_ca_port" --mspdir "$tls_admin_msp"
+  "$hfb_path"/clients/ca/fabric-ca-client register -d --id.name "$peer_name" --id.secret "$peer_pw" --id.type peer -u "https://$tls_ca_host:$tls_ca_port" --mspdir "$tls_admin_msp"
 fi
 
 log "enrolling with TLS CA server"
-"$hfb_path"/ca-client/fabric-ca-client enroll -d -u "https://$peer_name:$peer_pw@$tls_ca_host:$tls_ca_port" --csr.hosts "\"0.0.0.0,$host,$peer_svc,$peer_svc-pod\"" --mspdir "$hfb_path/$org_name/peers/$peer_name/tls"
+"$hfb_path"/clients/ca/fabric-ca-client enroll -d -u "https://$peer_name:$peer_pw@$tls_ca_host:$tls_ca_port" --csr.hosts "\"0.0.0.0,$host,$peer_svc,$peer_svc-pod\"" --mspdir "$hfb_path/$org_name/peers/$peer_name/tls"
 
 # register peer identity if organization CA exists locally
 if [ $org_local == 1 ]; then
@@ -154,7 +155,7 @@ if [ $org_local == 1 ]; then
   org_ca_host=$host
   org_ca_port="$(kubectl get svc "$org_name-ca" | awk 'FNR == 2 {print $5}' | sed -e "s/^.*://" -e "s/\/TCP//")"
   log "Org CA server is running on $org_ca_host:$org_ca_port"
-  "$hfb_path"/ca-client/fabric-ca-client register -d --id.name "$peer_name" --id.secret "$peer_pw" --id.type peer -u "https://$org_ca_host:$org_ca_port" --mspdir "$org_admin_msp"
+  "$hfb_path"/clients/ca/fabric-ca-client register -d --id.name "$peer_name" --id.secret "$peer_pw" --id.type peer -u "https://$org_ca_host:$org_ca_port" --mspdir "$org_admin_msp"
 fi
 
 # add NodeOUs
@@ -176,7 +177,7 @@ printf "NodeOUs:
 
 # enroll peer identity with TLS and organization CA servers
 log "enrolling with org CA server"
-"$hfb_path"/ca-client/fabric-ca-client enroll -d -u "https://$peer_name:$peer_pw@$org_ca_host:$org_ca_port" --mspdir "$hfb_path/$org_name/peers/$peer_name/msp"
+"$hfb_path"/clients/ca/fabric-ca-client enroll -d -u "https://$peer_name:$peer_pw@$org_ca_host:$org_ca_port" --mspdir "$hfb_path/$org_name/peers/$peer_name/msp"
 
 # create admin directory for peer
 mkdir -p "$hfb_path/$org_name/peers/admin/msp"

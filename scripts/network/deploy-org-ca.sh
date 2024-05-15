@@ -102,6 +102,7 @@ if [ "$rcert_path_global" == "" ]; then
 fi
 
 org_ca_svc="$org_name-ca"
+ca_client_dir="$hfb_path/clients/ca"
 
 # if TLS is locally deployed
 if [ $tls_local == 0 ]; then
@@ -185,10 +186,10 @@ if [[ $(dpkg -l | grep wget | wc -l) == 0 ]]; then
 fi
 
 # download client binary to client directory and extract
-if [ ! -f "$hfb_path/ca-client/fabric-ca-client" ];
+if [ ! -f "$ca_client_dir/fabric-ca-client" ];
 then
-	mkdir -p "$hfb_path/ca-client" &&
-	cd "$hfb_path/ca-client" &&
+	mkdir -p "$ca_client_dir" &&
+	cd "$ca_client_dir" &&
 	wget "https://github.com/hyperledger/fabric-ca/releases/download/v$ca_client_version/hyperledger-fabric-ca-linux-amd64-$ca_client_version.tar.gz" &&
 	tar -xzvf "hyperledger-fabric-ca-linux-amd64-$ca_client_version.tar.gz" &&
 	mv bin/fabric-ca-client . &&
@@ -202,22 +203,22 @@ fi
 
 # setup TLS root certificate for client binary
 log "setting up TLS root certificate"
-if [ ! -d "$hfb_path/ca-client/tls-root-cert" ];
+if [ ! -d "$ca_client_dir/tls-root-cert" ];
 then
-  mkdir -p "$hfb_path/ca-client/tls-root-cert"
+  mkdir -p "$ca_client_dir/tls-root-cert"
 fi
 
-if [ ! -f "$hfb_path/ca-client/tls-root-cert/$rcert_file" ];
+if [ ! -f "$ca_client_dir/tls-root-cert/$rcert_file" ];
 then
-  cp "$rcert_path_global/$rcert_file" "$hfb_path/ca-client/tls-root-cert/$rcert_file"
+  cp "$rcert_path_global/$rcert_file" "$ca_client_dir/tls-root-cert/$rcert_file"
   log "copied TLS root certificate to organization"
 fi
 
 tree "$hfb_path"
 
 # set env variables for client
-export FABRIC_CA_CLIENT_TLS_CERTFILES="$hfb_path/ca-client/tls-root-cert/$rcert_file"
-export FABRIC_CA_CLIENT_HOME="$hfb_path/ca-client"
+export FABRIC_CA_CLIENT_TLS_CERTFILES="$ca_client_dir/tls-root-cert/$rcert_file"
+export FABRIC_CA_CLIENT_HOME="$ca_client_dir"
 
 # registering organization admin user with TLS CA if locally exists
 if [ $tls_local == 1 ]; then
@@ -225,12 +226,12 @@ if [ $tls_local == 1 ]; then
   tls_ca_host="$org_ca_host"
   tls_ca_port="$(kubectl get svc "$org_name-tls-ca" | awk 'FNR == 2 {print $5}' | sed -e "s/^.*://" -e "s/\/TCP//")"
   log "TLS server found to be running on $tls_ca_host:$tls_ca_port"
-  "$hfb_path"/ca-client/fabric-ca-client register -d --id.name "$org_admin" --id.secret "$org_admin_pw" --id.type admin -u "https://$tls_ca_host:$tls_ca_port" --mspdir "$tls_admin_path"
+  "$hfb_path"/clients/ca/fabric-ca-client register -d --id.name "$org_admin" --id.secret "$org_admin_pw" --id.type admin -u "https://$tls_ca_host:$tls_ca_port" --mspdir "$tls_admin_path"
 fi
 
 # enroll org admin user with TLS CA
 log "enrolling organization admin user with TLS CA server"
-"$hfb_path"/ca-client/fabric-ca-client enroll -d -u "https://$org_admin:$org_admin_pw@$tls_ca_host:$tls_ca_port" --csr.hosts "\"0.0.0.0,$org_ca_host,$org_ca_svc,$org_ca_svc-pod\"" --mspdir "$admin_path/tls"
+"$hfb_path"/clients/ca/fabric-ca-client enroll -d -u "https://$org_admin:$org_admin_pw@$tls_ca_host:$tls_ca_port" --csr.hosts "\"0.0.0.0,$org_ca_host,$org_ca_svc,$org_ca_svc-pod\"" --mspdir "$admin_path/tls"
 
 # setup org CA server and deploy
 log "deploying CA server"
@@ -245,7 +246,7 @@ kubectl apply -f "$org_ca_manifest_path" && log "organization CA manifest is bei
 log "enrolling organization admin user with organization CA server"
 org_ca_port="$(kubectl get svc $org_ca_svc | awk 'FNR == 2 {print $5}' | sed -e "s/^.*://" -e "s/\/TCP//")"
 log "$org_ca_svc service is running on port $org_ca_port"
-"$hfb_path"/ca-client/fabric-ca-client enroll -d -u "https://$org_admin:$org_admin_pw@$org_ca_host:$org_ca_port" --mspdir "$admin_path/msp"
+"$hfb_path"/clients/ca/fabric-ca-client enroll -d -u "https://$org_admin:$org_admin_pw@$org_ca_host:$org_ca_port" --mspdir "$admin_path/msp"
 
 # create NodeOU
 log "creating NodeOU for the admin user"

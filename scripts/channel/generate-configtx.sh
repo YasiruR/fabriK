@@ -150,3 +150,5 @@ Profiles:
               Type: Signature
               Rule: \"OR('$org_name-msp.admin')\"
 " > "$config_dir/configtx.yaml"
+
+echo "---> generated $config_dir/configtx.yaml"
