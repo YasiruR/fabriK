@@ -179,9 +179,6 @@ printf "NodeOUs:
 log "enrolling with org CA server"
 "$hfb_path"/clients/ca/fabric-ca-client enroll -d -u "https://$peer_name:$peer_pw@$org_ca_host:$org_ca_port" --mspdir "$hfb_path/$org_name/peers/$peer_name/msp"
 
-# create admin directory for peer
-mkdir -p "$hfb_path/$org_name/peers/admin/msp"
-
 # parsing crypto file names
 keyfile=$(ls "$hfb_path/$org_name/peers/$peer_name/tls/keystore/")
 certfile=$(echo "$tls_ca_host"-"$tls_ca_port" | tr '.' '-' | awk '{print $1".pem"}')
@@ -234,8 +231,6 @@ spec:
               name: $peer_svc-volume
             - mountPath: /host/var/run
               name: $org_name-docker-volume
-            - mountPath: /tmp/hyperledger/$org_name/admin/msp
-              name: $org_name-admin-$peer_name-volume
           workingDir: /opt/gopath/src/github.com/hyperledger/fabric/$org_name/$peer_name
           env:
             - name: CORE_PEER_ID
@@ -270,10 +265,6 @@ spec:
         - name: $peer_svc-volume
           hostPath:
             path: $hfb_path/$org_name/peers/$peer_name
-            type: Directory
-        - name: $org_name-admin-$peer_name-volume
-          hostPath:
-            path: $hfb_path/$org_name/peers/admin/msp
             type: Directory
         - name: $org_name-docker-volume
           hostPath:
