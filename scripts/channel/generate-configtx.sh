@@ -1,13 +1,61 @@
 #!/bin/bash
 
 org_name=$1
-ord_cluster_ip=$2
 ord_cluster_port=$3
 ord_external_ip=$4
-ord_external_port=$5
-ord_cert=$6
 admin_msp=$7
 config_dir=$8
+
+# create arrays
+IFS=', ' read -r -a ord_cluster_ips <<< "$2"
+IFS=', ' read -r -a ord_external_ports <<< "$5"
+IFS=', ' read -r -a ord_certs <<< "$6"
+
+# create OrdererEndpoints
+i=0
+ord_endpoints=''
+consenters=''
+for ip in "${ord_cluster_ips[@]}"
+do
+  if [ $i == 0 ]; then
+    ord_endpoints+="- $ip:$ord_cluster_port"
+
+    consenters+="- Host: $ip
+        Port: $ord_cluster_port
+        ClientTLSCert: ${ord_certs[i]}
+        ServerTLSCert: ${ord_certs[i]}"
+  else
+    ord_endpoints+=$"
+      - $ip:$ord_cluster_port"
+
+    consenters+=$"
+      - Host: $ip
+        Port: $ord_cluster_port
+        ClientTLSCert: ${ord_certs[i]}
+        ServerTLSCert: ${ord_certs[i]}"
+  fi
+  i=$((i+1))
+done
+
+# create Consenters
+#i=0
+#consenters=''
+#for p in "${ord_external_ports[@]}"
+#do
+#  if [ $i == 0 ]; then
+#    consenters+="- Host: $ord_external_ip
+#        Port: $p
+#        ClientTLSCert: ${ord_certs[i]}
+#        ServerTLSCert: ${ord_certs[i]}"
+#  else
+#    consenters+=$"
+#      - Host: $ord_external_ip
+#        Port: $p
+#        ClientTLSCert: ${ord_certs[i]}
+#        ServerTLSCert: ${ord_certs[i]}"
+#  fi
+#  i=$((i+1))
+#done
 
 echo -e "---
 Organizations:
@@ -29,7 +77,7 @@ Organizations:
         Type: Signature
         Rule: \"OR('$org_name-msp.peer')\"
     OrdererEndpoints:
-      - $ord_cluster_ip:$ord_cluster_port
+      $ord_endpoints
 Capabilities:
   Channel: &ChannelCapabilities
     V2_0: true
@@ -88,10 +136,7 @@ Orderer: &OrdererDefaults
   MaxChannels: 0
   EtcdRaft:
     Consenters:
-      - Host: $ord_external_ip
-        Port: $ord_external_port
-        ClientTLSCert: $ord_cert
-        ServerTLSCert: $ord_cert
+      $consenters
     Options:
       TickInterval: 500ms
       ElectionTick: 10
