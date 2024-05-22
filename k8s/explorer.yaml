@@ -42,7 +42,7 @@ spec:
               name: <org-name>-explorer-wallet
           env:
             - name: DATABASE_HOST
-              value: "<org-name>-explorer-db-pod"
+              value: "<org-name>-explorer-db"
             - name: DATABASE_DATABASE
               value: "fabricexplorer"
             - name: DATABASE_USERNAME

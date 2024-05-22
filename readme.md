@@ -6,10 +6,14 @@ This IaC repository contains bash scripts and corresponding Kubernetes manifest 
 automate the deployment of Hyperledger Fabric components in Unix-like
 environments. The documentation provides the steps to deploy a minimal working Fabric network using the resources in this repository.
 
-Please refer to the [quickstart](#quickstart) for convenient and faster deployment of a network, which
+Please refer to the [Quickstart](#quickstart) for convenient and faster deployment of a network, which
 will be carried out through the automation scripts.
 
+Refer to this [section](#deploy-individual-components) for the deployment of individual components.
+
 Refer to the [detailed process](docs/deploy.md) for manual deployment of individual Fabric components.
+
+For the integration of Blockchain Explorer, refer to the [monitoring](docs/monitoring.md) documentation.
 
 ## Architecture
 

@@ -1,0 +1,48 @@
+{
+  "name": "<network-name>",
+  "version": "1.0.0",
+  "client": {
+    "tlsEnable": true,
+    "adminCredential": {
+      "id": "<explorer-username>",
+      "password": "<explorer-password>"
+    },
+    "enableAuthentication": true,
+    "organization": "<org-name>",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        },
+        "orderer": "300"
+      }
+    }
+  },
+  "channels": {
+    "<chan-name>": {
+      "peers": {
+        "<peer-name>": {}
+      }
+    }
+  },
+  "organizations": {
+    "<org-name>": {
+      "mspid": "<org-msp-id>",
+      "adminPrivateKey": {
+        "path": "<file-path-to-peer-admin-private-key>"
+      },
+      "peers": ["<peer-name>"],
+      "signedCert": {
+        "path": "<file-path-to-peer-admin-signed-certificate>"
+      }
+    }
+  },
+  "peers": {
+    "<peer-name>": {
+      "tlsCACerts": {
+        "path": "<file-path-to-peer-tls-root-ca-certificate>"
+      },
+      "url": "grpcs://<peer-cluster-ip>:<peer-cluster-port>"
+    }
+  }
+}
