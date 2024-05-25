@@ -6,10 +6,14 @@ This IaC repository contains bash scripts and corresponding Kubernetes manifest 
 automate the deployment of Hyperledger Fabric components in Unix-like
 environments. The documentation provides the steps to deploy a minimal working Fabric network using the resources in this repository.
 
-Please refer to the [quickstart](#quickstart) for convenient and faster deployment of a network, which
+Please refer to the [Quickstart](#quickstart) for convenient and faster deployment of a network, which
 will be carried out through the automation scripts.
 
+Refer to this [section](#deploy-individual-components) for the deployment of individual components.
+
 Refer to the [detailed process](docs/deploy.md) for manual deployment of individual Fabric components.
+
+For the integration of Blockchain Explorer, refer to the [monitoring](docs/monitoring.md) documentation.
 
 ## Architecture
 
@@ -22,7 +26,9 @@ However, a containerization layer (eg: LXC) is not mandatory to execute the scri
 
 ## Quickstart
 
-This option provides automated scripts to bootstrap a Hyperledger Fabric network on Kubernetes with only a single
+### Network
+
+This feature provides automated scripts to bootstrap a Hyperledger Fabric network on Kubernetes with only a single
 command. A number of Kubernetes services related to Fabric components will be deployed on the same instance which
 primarily serves for development and testing purposes.
 
@@ -49,12 +55,36 @@ are executed only when the corresponding K8s service is up and running. You may 
 
 To **shutdown** the network, simply run `bash network.sh -r`
 
-### Individual Components
+### Create and join a channel
+
+You may use _channel.sh_ script to easily create a channel in the deployed network and join an arbitrary number of orderers
+and peers to the channel.
+
+For an example, if you need to create a channel (_chan1_) for the organization _hfb-org_ with
+2 orderers (_ord0_, _ord2_), 3 peers (_peer0_, _peer1_, _peer2_) and an orderer-admin (_osnadmin_),
+
+`bash channel.sh -a osnadmin -c chan1 -n org -o ord0,ord2 -p peer0,peer1,peer2`
+
+**Note:** The script currently has a bug which makes the first execution of the script erroneous. However, it succeeds
+from the 2nd attempt onwards. Hence, you are advised to create a bogus channel initially before creating the required channels to
+overcome this issue until it is resolved.
+
+### Add anchor peer
+
+Since recent versions of Fabric, adding anchor peers should be done as an update transaction to the channel which involves
+multiple steps to be followed. This can be achieved using the _add-anchor-peer.sh_ script.
+
+For an example, if you need to set _peer2_ as the anchor peer in _chan1_ with the channel block residing at
+_/networks/chan1/block.pb_ execute the command as follows.
+
+`bash add-anchor-peer.sh -c chan1 -f /networks/chan1/block.pb -p peer2`
+
+## Deploy individual Components
 
 You can also bootstrap individual Fabric components separately by using the corresponding script in
 _scripts_ directory as explained below.
 
-#### General notes
+### General notes
 
 In each of the following scripts, the example commands contain only the minimal arguments required. However, you
 may use additional parameters for granular configuration (which will be set to default values in scripts if not
@@ -63,7 +93,7 @@ may also explicitly provide any existing manifest file via CLI arguments if desi
 
 For further information regarding the arguments, execute the corresponding script with `-h` flag.
 
-#### Deploy a TLS Certificate Authority (CA)
+### Deploy a TLS Certificate Authority (CA)
 
 Execute *deploy-tls-ca.sh* script which can be found in *scripts* directory as follows.
 
@@ -71,9 +101,9 @@ Execute *deploy-tls-ca.sh* script which can be found in *scripts* directory as f
 
 - `hostname` should be the exposed IP address or hostname of the TLS CA instance
 - Additional parameters can be configured with corresponding flags
-   - Run `bash deploy-tls-ca.sh -h` for more details
-   - If these parameters not provided, default values will be used as specified in the script
-   - If the instance encounters higher network latency, increase the sleep buffer with `-s` flag
+    - Run `bash deploy-tls-ca.sh -h` for more details
+    - If these parameters not provided, default values will be used as specified in the script
+    - If the instance encounters higher network latency, increase the sleep buffer with `-s` flag
 
 The following folder structure is created upon successful execution of the script. Read
 through the logs to verify if no error has occurred during the deployment.
@@ -88,7 +118,7 @@ Verify if TLS CA has been spawned as a Kubernetes service by executing `kubectl 
 
 To further verify, refer to the logs of the Kubernetes pod by `kubectl logs <pod-id>`.
 
-#### Deploy an organization Certificate Authority
+### Deploy an organization Certificate Authority
 
 Execute `deploy-org-ca.sh` script in _scripts_ directory as follows in order to start a CA
 agent for the organization.
@@ -121,7 +151,7 @@ You can find more information and additional parameters of the script by executi
 In each of the above cases, the generated folder structure of organization CA will look similar to the one generated by
 TLS CA.
 
-#### Deploy an orderer
+### Deploy an orderer
 
 Execute `deploy-ord.sh` in *scripts* directory as follows to start an orderer in the network in case both CAs exist locally
 on the same instance as orderer.
@@ -133,7 +163,7 @@ with each CA in advance and provide the exposed URL of CAs via CLI arguments to 
 `-h` to see further details about these arguments. Also make sure to provide the exact same credentials which were used
 for the registration.
 
-#### Remove a component
+### Remove a component
 
 Execute the following command to remove a service including the files it created during bootstrap.
 

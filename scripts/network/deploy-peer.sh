@@ -202,9 +202,6 @@ spec:
     - name: operations-port
       port: 8181
       targetPort: 8181
-    - name: gossip-port
-      port: 8282
-      targetPort: 8282
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -254,7 +251,7 @@ spec:
             - name: CORE_PEER_GOSSIP_ORGLEADER
               value: \"false\"
             - name: CORE_PEER_GOSSIP_EXTERNALENDPOINT
-              value: \"$peer_svc-pod:8282\"
+              value: \"$peer_svc:$port\"
             - name: CORE_OPERATIONS_LISTENADDRESS
               value: \"$peer_svc-pod:8181\"
             - name: CORE_OPERATIONS_TLS_ENABLED

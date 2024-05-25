@@ -71,7 +71,7 @@ spec:
             - name: CORE_PEER_GOSSIP_ORGLEADER
               value: "false"
             - name: CORE_PEER_GOSSIP_EXTERNALENDPOINT
-              value: "<org-name>-<peer-name>-pod:<gossip-port>"
+              value: "<org-name>-<peer-name>:<gossip-port>"
             - name: CORE_OPERATIONS_LISTENADDRESS
               value: "<org-name>-<peer-name>-pod:<op-port>"
             - name: CORE_OPERATIONS_TLS_ENABLED

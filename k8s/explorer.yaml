@@ -1,0 +1,80 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: <org-name>-explorer
+spec:
+  type: LoadBalancer
+  selector:
+    app: <org-name>-explorer
+  ports:
+    - name: explorer-port
+      port: <explorer-port>
+      targetPort: <explorer-port>
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: <org-name>-explorer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: <org-name>-explorer
+  template:
+    metadata:
+      labels:
+        app: <org-name>-explorer
+    spec:
+      hostname: <org-name>-explorer-pod
+      containers:
+        - name: <org-name>-explorer
+          image: ghcr.io/hyperledger-labs/explorer:latest
+          ports:
+            - containerPort: <explorer-port>
+          volumeMounts:
+            - mountPath: /opt/explorer/app/platform/fabric/config.json
+              name: <org-name>-explorer-config
+            - mountPath: /opt/explorer/app/platform/fabric/connection-profile
+              name: <org-name>-explorer-profile
+            - mountPath: /tmp/crypto
+              name: <org-name>-explorer-crypto
+            - mountPath: /opt/explorer/wallet
+              name: <org-name>-explorer-wallet
+          env:
+            - name: DATABASE_HOST
+              value: "<org-name>-explorer-db"
+            - name: DATABASE_DATABASE
+              value: "fabricexplorer"
+            - name: DATABASE_USERNAME
+              value: "hppoc"
+            - name: DATABASE_PASSWD
+              value: "password"
+            - name: LOG_LEVEL_APP
+              value: "info"
+            - name: LOG_LEVEL_DB
+              value: "info"
+            - name: LOG_LEVEL_CONSOLE
+              value: "debug"
+            - name: LOG_CONSOLE_STDOUT
+              value: "true"
+            - name: DISCOVERY_AS_LOCALHOST
+              value: "false"
+            - name: PORT
+              value: "8080"
+      volumes:
+        - name: <org-name>-explorer-config
+          hostPath:
+            path: <config-file>
+            type: File
+        - name: <org-name>-explorer-profile
+          hostPath:
+            path: <conn-profile-dir>
+            type: Directory
+        - name: <org-name>-explorer-crypto
+          hostPath:
+            path: <org-crypto-dir>
+            type: Directory
+        - name: <org-name>-explorer-wallet
+          hostPath:
+            path: <wallet-dir>
+            type: Directory

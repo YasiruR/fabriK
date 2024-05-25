@@ -8,7 +8,7 @@ on a Kubernetes cluster.
 ### 1. Create a directory for the CA server
 
 Choose a folder structure for your deployment. We will use the following example in
-our deployment which will be continued throughout this document.
+our deployment which will be continued throughout this document, assuming that you have root permissions.
 
 <div align="center">
     <img src="imgs/tls-ca-struct.png" height="15%" width="15%">
@@ -16,8 +16,8 @@ our deployment which will be continued throughout this document.
 
 ### 2. Create the manifest
 
-Since our primarily focus is to deploy the CA in Kubernetes, we will create the manifest
-using _LoadBalancer_ service type in case it needs to be exposed externally. An [example](../k8s/tls-ca.yaml) is
+Since our primarily focus is to deploy the CA in Kubernetes, we will create the manifest 
+using _LoadBalancer_ service type in case it needs to be exposed externally. An [example](../k8s/tls-ca.yaml) is 
 provided in the k8s directory of this repository.
 
 You may replace *\<org-name>*, *\<port>*, *\<ca-external-ip>*, *\<admin-user>*, *\<admin-pw>* and *\<host-dir>*
@@ -41,7 +41,7 @@ System and CPU architecture. We will consider a Linux 64-bit architecture in our
 ### 5. Set up the CA client
 
 Usually, the client binary will be used in a separate instance (for example, in peer and orderer nodes)
-but for the sake of convenience we will set up it in the same instance as the TLA CA server.
+but for the sake of convenience we will set up it in the same instance as the TLA CA server. 
 Hence, we can extend the above folder structure to include the client.
 
 `mkdir -p /root/hfb/ca-client`\
@@ -72,8 +72,8 @@ You may add these commands to `.bashrc` file for persistence.
 
 ### 8. Setup Fabric identity for TLS CA
 
-Each Fabric component needs to be associated with an identity, including the TLS CA server. This
-identity is already registered when the CA server was bootstrapped with our K8s manifest file.
+Each Fabric component needs to be associated with an identity, including the TLS CA server. This 
+identity is already registered when the CA server was bootstrapped with our K8s manifest file. 
 Use the same credentials now to enroll this identity with the CA client binary. Since this enrollment
 will generate a set of files needed for the operations of Fabric, we need to create a directory for the
 user in advance.
@@ -92,13 +92,13 @@ The resulting folder structure should now appear as follows:
 
 ## Organization Certificate Authority
 
-As similar to the TLS CA, a separate CA server (as recommended) is used within an organization
+As similar to the TLS CA, a separate CA server (as recommended) is used within an organization 
 to generate the identities which will be required to operate the Fabric network.
 
 ### 1. Register organization admin with TLS CA server
 
 In order to enable TLS communication by the organization CA, we need to register it as a user with the TLS
-CA server. For example, if the user _admin-org1_ with the password _adminpw_ needs to be registered for
+CA server. For example, if the user _admin-org1_ with the password _adminpw_ needs to be registered for 
 the organization _org1_ in the above TLS server, the commands should be executed as follows.
 
 `cd /root/hfb/ca-client`\
@@ -107,7 +107,7 @@ the organization _org1_ in the above TLS server, the commands should be executed
 ### 2. Enroll admin user with TLS CA
 
 In order to generate TLS certificates (which will be used for communication by organization CA),
-we need to enroll the admin user with a TLS CA server. First we will create the directories required
+we need to enroll the admin user with a TLS CA server. First we will create the directories required 
 to bootstrap our admin user followed by the enroll command.
 
 `mkdir -p /root/hfb/org1/ca/admin/msp`\
@@ -116,7 +116,7 @@ to bootstrap our admin user followed by the enroll command.
 
 ### 3. Setup organization CA server
 
-Create the directory to be used by the CA server. In our example, we will use the same instance with
+Create the directory to be used by the CA server. In our example, we will use the same instance with 
 CA client to deploy the CA server.
 
 `mkdir -p /root/hfb/org1/ca/server/tls`
@@ -196,7 +196,7 @@ respective directories in advance.
 ### 3. Register with TLS CA
 
 In order to enable TLS communication, the node needs to be first registered with the TLS
-server. This command* should be executed in the instance where TLS CA is hosted with the
+server. This command* should be executed in the instance where TLS CA is hosted with the 
 admin user.
 
 `./fabric-ca-client register -d --id.name ord1-org1 --id.secret ord1pw --id.type orderer -u https://fabric-tls-ca:9090 --mspdir /root/hfb/tls-ca/admin/msp`
@@ -204,7 +204,7 @@ admin user.
 ### 4. Enroll with TLS CA
 
 The following command* needs to be executed in the instance where peer/node will be deployed
-in order to generate and store TLS certificates (we assume that the hostname of the orderer
+in order to generate and store TLS certificates (we assume that the hostname of the orderer 
 instance is _fabric-org1-ord1_). The credentials should be the same which you
 used to register the node with the TLS server.
 
@@ -212,7 +212,7 @@ used to register the node with the TLS server.
 
 ### 5. Register with organization CA
 
-We now need to create an identity for the user within the organization which can be achieved by
+We now need to create an identity for the user within the organization which can be achieved by 
 executing the following command* with the organization CA.
 
 `./fabric-ca-client register -d --id.name ord1-org1 --id.secret ord1pw --id.type orderer -u https://fabric-org1-ca:9090 --mspdir /root/hfb/org1/ca/admin/msp`
@@ -223,9 +223,9 @@ We can now create the MSP related to the orderer with the enroll command* as fol
 
 `./fabric-ca-client enroll -d -u https://ord1-org1:ord1pw@fabric-org1-ca:9090 --mspdir /root/hfb/org1/orderers/ord1/msp`
 
-### 7. Deploy peer/orderer
+### 7. Deploy orderer
 
-As similar with the CAs, we can now modify the corresponding sample manifest file
+As similar with the CAs, we can now modify the corresponding sample manifest file 
 in [k8s directory](../k8s) as necessary and apply it with _kubectl_ command.
 
 `kubectl apply -f <orderer/peer-manifest-file>.yaml`
