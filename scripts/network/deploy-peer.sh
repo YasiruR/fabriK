@@ -136,6 +136,7 @@ export FABRIC_CA_CLIENT_HOME="$ca_client_dir"
 # create peer directory
 mkdir -p "$hfb_path/$org_name/peers/$peer_name/msp"
 mkdir -p "$hfb_path/$org_name/peers/$peer_name/tls"
+mkdir -p "$hfb_path/$org_name/peers/$peer_name/production"
 
 # register peer identity if TLS CA exists locally
 if [ $tls_local == 1 ]; then
@@ -228,6 +229,8 @@ spec:
               name: $peer_svc-volume
             - mountPath: /host/var/run
               name: $org_name-docker-volume
+            - mountPath: /var/hyperledger/production
+              name: $peer_name-prod-volume
           workingDir: /opt/gopath/src/github.com/hyperledger/fabric/$org_name/$peer_name
           env:
             - name: CORE_PEER_ID
@@ -266,6 +269,10 @@ spec:
         - name: $org_name-docker-volume
           hostPath:
             path: /var/run
+            type: Directory
+        - name: $peer_name-prod-volume
+          hostPath:
+            path: $hfb_path/$org_name/peers/$peer_name/production
             type: Directory" > "$peer_manifest_path"
 fi
 
