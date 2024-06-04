@@ -48,8 +48,6 @@ spec:
               name: <org-name>-<peer-name>-core-volume
             - mountPath: /opt/hyperledger/ccaas_builder
               name: buildpack-volume
-            - mountPath: /var/hyperledger/production
-              name: peer-prod-volume
           workingDir: /opt/gopath/src/github.com/hyperledger/fabric/<org-name>/<peer-name>
           env:
             - name: CORE_PEER_ID
@@ -82,6 +80,8 @@ spec:
               value: "/tmp/hyperledger/<org-name>/<peer-name>/config"
             - name: CORE_VM_ENDPOINT
               value: "unix:///host/var/run/docker.sock"
+            - name: CORE_CHAINCODE_MODE
+              value: "dev"
       volumes:
         - name: <org-name>-<peer-name>-volume
           hostPath:
@@ -102,8 +102,4 @@ spec:
         - name: buildpack-volume
           hostPath:
             path: <build-path>
-            type: Directory
-        - name: peer-prod-volume
-          hostPath:
-            path: <peer-prod-path>
             type: Directory

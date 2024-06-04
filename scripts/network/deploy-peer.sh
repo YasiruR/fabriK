@@ -23,6 +23,7 @@ tls_admin_msp="$hfb_path/tls-ca/admin/msp"
 org_admin_msp="$hfb_path/$org_name/ca/admin/msp"
 rcert_path_global="$hfb_path/tls-ca/root-cert"
 rcert_file='tls-ca-cert.pem'
+buildpack='/root/buildpack'
 
 log() {
 	echo "$log_prefix $1"
@@ -32,9 +33,10 @@ log() {
 tls_local=0
 org_local=0
 help=0
-while getopts 'a:c:d:e:f:hl:m:o:p:r:s:t:u:' flag; do
+while getopts 'a:b:c:d:e:f:hl:m:o:p:r:s:t:u:' flag; do
   case "${flag}" in
     a) host="${OPTARG}" ;;
+    b) buildpack="${OPTARG}" ;;
     c) org_ca_host="${OPTARG}" ;;
     d) org_admin_msp="${OPTARG}" ;;
     e) org_ca_port="${OPTARG}" ;;
@@ -136,7 +138,6 @@ export FABRIC_CA_CLIENT_HOME="$ca_client_dir"
 # create peer directory
 mkdir -p "$hfb_path/$org_name/peers/$peer_name/msp"
 mkdir -p "$hfb_path/$org_name/peers/$peer_name/tls"
-mkdir -p "$hfb_path/$org_name/peers/$peer_name/production"
 
 # register peer identity if TLS CA exists locally
 if [ $tls_local == 1 ]; then
@@ -229,8 +230,8 @@ spec:
               name: $peer_svc-volume
             - mountPath: /host/var/run
               name: $org_name-docker-volume
-            - mountPath: /var/hyperledger/production
-              name: $peer_name-prod-volume
+            - mountPath: /opt/hyperledger/ccaas_builder
+              name: buildpack-volume
           workingDir: /opt/gopath/src/github.com/hyperledger/fabric/$org_name/$peer_name
           env:
             - name: CORE_PEER_ID
@@ -261,6 +262,8 @@ spec:
               value: \"false\"
             - name: CORE_VM_ENDPOINT
               value: \"unix:///host/var/run/docker.sock\"
+            - name: CORE_CHAINCODE_MODE
+              value: \"dev\"
       volumes:
         - name: $peer_svc-volume
           hostPath:
@@ -270,9 +273,9 @@ spec:
           hostPath:
             path: /var/run
             type: Directory
-        - name: $peer_name-prod-volume
+        - name: buildpack-volume
           hostPath:
-            path: $hfb_path/$org_name/peers/$peer_name/production
+            path: $buildpack
             type: Directory" > "$peer_manifest_path"
 fi
 
