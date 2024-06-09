@@ -16,7 +16,6 @@ org_ca_port=''
 
 # file paths
 hfb_dir='/root/hfb'
-ca_client_dir="$hfb_dir/clients/ca"
 rcert_file='tls-ca-cert.pem'
 
 # read arguments
@@ -40,6 +39,10 @@ done
 log() {
   echo "$log_prefix $1"
 }
+
+if [[ $ca_client_dir == '' ]]; then
+  ca_client_dir="$hfb_dir/clients/ca"
+fi
 
 if [[ $org_ca_host == '' ]]; then
   org_ca_host=$(hostname)

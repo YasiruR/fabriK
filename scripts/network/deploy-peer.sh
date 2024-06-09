@@ -21,7 +21,6 @@ peer_pw='peerpw'
 hfb_path='/root/hfb'
 tls_admin_msp="$hfb_path/tls-ca/admin/msp"
 org_admin_msp="$hfb_path/$org_name/ca/admin/msp"
-rcert_path_global="$hfb_path/tls-ca/root-cert"
 rcert_file='tls-ca-cert.pem'
 buildpack='/root/buildpack'
 
@@ -61,6 +60,7 @@ if [[ $help == 1 ]]; then
 
   Flags:
     a: hostname of the peer
+    b: Directory path to external buildpack
     c: hostname of the organization CA [must be provided if org CA does not locally exist]
     d: MSP directory path of organization admin [must be provided if org CA locally exists]
     e: port of the organization CA [must be provided if does not locally exist]
@@ -83,6 +83,10 @@ fi
 if [ "$host" == '' ]; then
   echo "hostname of the peer should be provided [run with -h flag to see more details on usage]"
   exit 0
+fi
+
+if [ "$rcert_path_global" == '' ]; then
+  rcert_path_global="$hfb_path/tls-ca/root-cert"
 fi
 
 if [ "$tls_ca_host" == '' ]; then
