@@ -132,6 +132,7 @@ export FABRIC_CA_CLIENT_HOME="$ca_client_dir"
 # create orderer directory
 mkdir -p "$hfb_path/$org_name/orderers/$ord_name/msp"
 mkdir -p "$hfb_path/$org_name/orderers/$ord_name/tls"
+mkdir -p "$hfb_path/$org_name/orderers/$ord_name/production"
 
 # register orderer identity if TLS CA exists locally
 if [ $tls_local == 1 ]; then
@@ -221,6 +222,8 @@ spec:
           volumeMounts:
             - mountPath: /tmp/hyperledger/$org_name/$ord_name
               name: $ord_svc-volume
+            - mountPath: /var/hyperledger/production
+              name: $ord_svc-prod-volume
           workingDir: /opt/gopath/src/github.com/hyperledger/fabric/$org_name/$ord_name
           env:
             - name: ORDERER_GENERAL_LISTENADDRESS
@@ -261,6 +264,10 @@ spec:
         - name: $ord_svc-volume
           hostPath:
             path: $hfb_path/$org_name/orderers/$ord_name
+            type: Directory
+        - name: $ord_svc-prod-volume
+          hostPath:
+            path: $hfb_path/$org_name/orderers/$ord_name/production
             type: Directory" > "$ord_manifest_path"
 fi
 

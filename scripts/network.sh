@@ -1,6 +1,7 @@
 #!/bin/bash
 
 hostname=''
+build_dir='/root/buildpack'
 hfb_dir='/root/hfb'
 org_name='org'
 n_peers=1
@@ -9,8 +10,9 @@ sleep_s='20'
 help=0
 remove=0
 
-while getopts 'd:hi:n:o:p:rs:' flag; do
+while getopts 'b:d:hi:n:o:p:rs:' flag; do
   case "${flag}" in
+    b) build_dir="${OPTARG}" ;;
     d) hfb_dir="${OPTARG}" ;;
     h) help=1 ;;
     i) hostname="${OPTARG}" ;;
@@ -29,6 +31,7 @@ if [[ $help == 1 ]]; then
     bash network.sh [operation] [arguments]
 
   Arguments:
+    b: root directory for buildpack of chaincodes [default: $build_dir]
     d: root directory for deployment [default: $hfb_dir]
     i: hostname of the peer [required]
     n: name of the organization [default: org]
@@ -55,13 +58,13 @@ if [ $remove == 1 ]; then
     log "removing $s..."
     bash ./network/rm-svc.sh "$s" "$hfb_dir"
   done
-  rm -r "$hfb_dir"
+  sudo rm -r "$hfb_dir"
   exit 0
 fi
 
 if [ "$hostname" == '' ]; then
-  echo "hostname should be provided [run with -h for more information]"
-  exit 0
+  hostname=$(hostname)
+  log "$hostname is detected as the hostname of the server. Run script with -i flag to change the hostname [-h for help]"
 fi
 
 logSuccess() {
@@ -85,18 +88,18 @@ if [ $remove == 0 ]; then
   log "initializing TLS CA deployment..."
   bash ./network/deploy-tls-ca.sh -a "$hostname" -d "$hfb_dir" -o "$org_name" -s "$sleep_s"
   log "initializing organization CA deployment..."
-  bash ./network/deploy-org-ca.sh -i "$hostname" -l -d "$hfb_dir"/tls-ca/admin/msp -o "$org_name" -s "$sleep_s"
+  bash ./network/deploy-org-ca.sh -i "$hostname" -l -d "$hfb_dir"/tls-ca/admin/msp -o "$org_name" -s "$sleep_s" -f "$hfb_dir"
 
   for (( i=0; i<$n_peers; i++ ))
   do
     log "initializing peer$i deployment..."
-    bash ./network/deploy-peer.sh -a "$hostname" -d "$hfb_dir"/"$org_name"/ca/admin/msp -l "$hfb_dir"/tls-ca/admin/msp -u "peer$i" -o "$org_name" -s "$sleep_s"
+    bash ./network/deploy-peer.sh -a "$hostname" -b "$build_dir" -f "$hfb_dir" -d "$hfb_dir"/"$org_name"/ca/admin/msp -l "$hfb_dir"/tls-ca/admin/msp -u "peer$i" -o "$org_name" -s "$sleep_s"
   done
 
   for (( i=0; i<$n_ords; i++ ))
   do
     log "initializing ord$i deployment..."
-    bash ./network/deploy-orderer.sh -a "$hostname" -d "$hfb_dir"/"$org_name"/ca/admin/msp -l "$hfb_dir"/tls-ca/admin/msp -u "ord$i" -o "$org_name" -s "$sleep_s"
+    bash ./network/deploy-orderer.sh -a "$hostname" -f "$hfb_dir" -d "$hfb_dir"/"$org_name"/ca/admin/msp -l "$hfb_dir"/tls-ca/admin/msp -u "ord$i" -o "$org_name" -s "$sleep_s"
   done
   logSuccess
   exit 0

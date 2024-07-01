@@ -37,6 +37,8 @@ spec:
           volumeMounts:
             - mountPath: /tmp/hyperledger/<org-name>/<orderer-name>
               name: <org-name>-<orderer-name>-volume
+            - mountPath: /var/hyperledger/production
+              name: orderer-prod-volume
           workingDir: /opt/gopath/src/github.com/hyperledger/fabric/<org-name>/<orderer-name>
           env:
             - name: ORDERER_GENERAL_LISTENADDRESS
@@ -77,4 +79,8 @@ spec:
         - name: <org-name>-<orderer-name>-volume
           hostPath:
             path: <orderer-dir>
+            type: Directory
+        - name: orderer-prod-volume
+          hostPath:
+            path: <orderer-prod-path>
             type: Directory

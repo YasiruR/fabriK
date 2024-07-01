@@ -77,12 +77,12 @@ Flags:
 fi
 
 # set variables
-if [ "$admin_path" == "" ]; then
-  admin_path="/root/hfb/$org_name/ca/admin"
-fi
-
 if [ "$hfb_path" == "" ]; then
   hfb_path='/root/hfb'
+fi
+
+if [ "$admin_path" == "" ]; then
+  admin_path="$hfb_path/$org_name/ca/admin"
 fi
 
 if [ "$org_name" == "" ]; then
@@ -98,7 +98,7 @@ if [ "$org_admin_pw" == "" ]; then
 fi
 
 if [ "$rcert_path_global" == "" ]; then
-  rcert_path_global="/root/hfb/tls-ca/root-cert"
+  rcert_path_global="$hfb_path/tls-ca/root-cert"
 fi
 
 org_ca_svc="$org_name-ca"
