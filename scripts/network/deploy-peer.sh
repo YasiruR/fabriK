@@ -237,6 +237,8 @@ spec:
               name: $org_name-docker-volume
             - mountPath: /opt/hyperledger/ccaas_builder
               name: buildpack-volume
+            - mountPath: /etc/hyperledger/fabric/core.yaml
+              name: $peer_svc-core-yaml
             - mountPath: /var/hyperledger/production
               name: $peer_svc-prod-volume
           workingDir: /opt/gopath/src/github.com/hyperledger/fabric/$org_name/$peer_name
@@ -246,7 +248,7 @@ spec:
             - name: CORE_PEER_ADDRESS
               value: \"$peer_svc-pod:$port\"
             - name: CORE_PEER_LOCALMSPID
-              value: \"$org_name-msp\"
+              value: \"${org_name}msp\"
             - name: CORE_PEER_MSPCONFIGPATH
               value: \"/tmp/hyperledger/$org_name/$peer_name/msp\"
             - name: CORE_PEER_TLS_ENABLED
@@ -284,11 +286,19 @@ spec:
           hostPath:
             path: $buildpack
             type: Directory
+        - name: $peer_svc-core-yaml
+          hostPath:
+            path: $hfb_path/$org_name/peers/$peer_name/config/core.yaml
+            type: File
         - name: $peer_svc-prod-volume
           hostPath:
             path: $hfb_path/$org_name/peers/$peer_name/production
             type: Directory" > "$peer_manifest_path"
 fi
+
+# set up an external core.yaml
+mkdir -p "$hfb_path/$org_name/peers/$peer_name/config"
+cp config/core.yaml "$hfb_path/$org_name/peers/$peer_name/config/"
 
 # deploy peer
 log "deploying peer service"

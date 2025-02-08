@@ -199,3 +199,5 @@ cp "$hfb_dir"/tls-ca/root-cert/tls-ca-cert.pem "$hfb_dir"/clients/ca/tls-root-ce
 
 log "registered and enrolled the admin user for TLS CA (ID: $tls_admin, password: $tls_admin_pw)"
 log "TLS CA is deployed successfully"
+
+# todo add csr hosts to resolve client cert issue

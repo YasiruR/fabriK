@@ -1,0 +1,36 @@
+name: Caliper Benchmarks
+version: "2.0.0"
+
+caliper:
+  blockchain: fabric
+
+channels:
+  # channelName of mychannel matches the name of the channel created by test network
+  - channelName: <chan-name>
+    # the chaincodeIDs of all the fabric chaincodes in caliper-benchmarks
+    contracts:
+      - id: fabcar
+      - id: fixed-asset
+      - id: marbles
+      - id: simple
+      - id: smallbank
+
+organizations:
+  - mspid: <msp-id-org>
+    identities:
+      certificates:
+        - name: '<peer-id>'
+          clientPrivateKey:
+            path: '<path-private-key>'
+          clientSignedCert:
+            path: '<path-signed-certs>'
+    peers:
+      - endpoint: '<public-ip:port-if-docker-caliper>'
+        tlsCACerts:
+          path: '<path-tls-root-cert>'
+        grpcOptions:
+          grpc.keepalive_timeout_ms: 20000
+          grpc.keepalive_time_ms: 120000
+          grpc.http2.min_time_between_pings_ms: 120000
+          grpc.http2.max_pings_without_data: 0
+          grpc.keepalive_permit_without_calls: 1

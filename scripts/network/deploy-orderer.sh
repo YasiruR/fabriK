@@ -243,7 +243,7 @@ spec:
             - name: ORDERER_GENERAL_LOCALMSPDIR
               value: \"/tmp/hyperledger/$org_name/$ord_name/msp\"
             - name: ORDERER_GENERAL_LOCALMSPID
-              value: \"$org_name-msp\"
+              value: \"${org_name}msp\"
             - name: ORDERER_FILELEDGER_LOCATION
               value: \"/tmp/hyperledger/$org_name/$ord_name/ledger\"
             - name: ORDERER_CHANNELPARTICIPATION_ENABLED

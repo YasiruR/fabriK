@@ -17,7 +17,7 @@ our deployment which will be continued throughout this document, assuming that y
 ### 2. Create the manifest
 
 Since our primarily focus is to deploy the CA in Kubernetes, we will create the manifest 
-using _LoadBalancer_ service type in case it needs to be exposed externally. An [example](../k8s/tls-ca.yaml) is 
+using _LoadBalancer_ service type in case it needs to be exposed externally. An [example](../manifests/tls-ca.yaml) is 
 provided in the k8s directory of this repository.
 
 You may replace *\<org-name>*, *\<port>*, *\<ca-external-ip>*, *\<admin-user>*, *\<admin-pw>* and *\<host-dir>*
@@ -129,7 +129,7 @@ Copy the generated certificates to the server directory.
 
 ### 4. Bootstrap organization CA server
 
-We can now modify the [sample manifest](../k8s/org-ca.yaml) file provided in the _k8s_ directory as same as
+We can now modify the [sample manifest](../manifests/org-ca.yaml) file provided in the _k8s_ directory as same as
 with TLS CA and apply it using _kubectl_. However, in this case, you need to provide the same admin credentials
 which were used to enroll with TLS CA server in the bootstrap command of the manifest file.
 
@@ -226,7 +226,7 @@ We can now create the MSP related to the orderer with the enroll command* as fol
 ### 7. Deploy orderer
 
 As similar with the CAs, we can now modify the corresponding sample manifest file 
-in [k8s directory](../k8s) as necessary and apply it with _kubectl_ command.
+in [k8s directory](../manifests) as necessary and apply it with _kubectl_ command.
 
 `kubectl apply -f <orderer/peer-manifest-file>.yaml`
 

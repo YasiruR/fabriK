@@ -1,85 +1,24 @@
-#!/bin/bash
-
-org_name=$1
-ord_cluster_port=$3
-ord_external_ip=$4
-admin_msp=$7
-config_dir=$8
-
-org_config_name=${org_name^}
-
-# create arrays
-IFS=', ' read -r -a ord_cluster_ips <<< "$2"
-IFS=', ' read -r -a ord_external_ports <<< "$5"
-IFS=', ' read -r -a ord_certs <<< "$6"
-
-# create OrdererEndpoints
-i=0
-ord_endpoints=''
-consenters=''
-for ip in "${ord_cluster_ips[@]}"
-do
-  if [ $i == 0 ]; then
-    ord_endpoints+="- $ip:$ord_cluster_port"
-
-    consenters+="- Host: $ip
-        Port: $ord_cluster_port
-        ClientTLSCert: ${ord_certs[i]}
-        ServerTLSCert: ${ord_certs[i]}"
-  else
-    ord_endpoints+=$"
-      - $ip:$ord_cluster_port"
-
-    consenters+=$"
-      - Host: $ip
-        Port: $ord_cluster_port
-        ClientTLSCert: ${ord_certs[i]}
-        ServerTLSCert: ${ord_certs[i]}"
-  fi
-  i=$((i+1))
-done
-
-# create Consenters
-#i=0
-#consenters=''
-#for p in "${ord_external_ports[@]}"
-#do
-#  if [ $i == 0 ]; then
-#    consenters+="- Host: $ord_external_ip
-#        Port: $p
-#        ClientTLSCert: ${ord_certs[i]}
-#        ServerTLSCert: ${ord_certs[i]}"
-#  else
-#    consenters+=$"
-#      - Host: $ord_external_ip
-#        Port: $p
-#        ClientTLSCert: ${ord_certs[i]}
-#        ServerTLSCert: ${ord_certs[i]}"
-#  fi
-#  i=$((i+1))
-#done
-
-echo -e "---
+---
 Organizations:
-  - &$org_config_name
-    Name: $org_name
-    ID: ${org_name}msp
-    MSPDir: $admin_msp
-    Policies: &${org_config_name}Policies
+  - &Org1
+    Name: <org-name>
+    ID: <org-name>-msp
+    MSPDir: <org-admin-msp>
+    Policies: &Org1Policies
       Readers:
         Type: Signature
-        Rule: \"OR('${org_name}msp.admin', '${org_name}msp.peer', '${org_name}msp.client')\"
+        Rule: "OR('<org-name>-msp.admin', '<org-name>-msp.peer', '<org-name>-msp.client')"
       Writers:
         Type: Signature
-        Rule: \"OR('${org_name}msp.member')\"
+        Rule: "OR('<org-name>-msp.member')"
       Admins:
         Type: Signature
-        Rule: \"OR('${org_name}msp.admin')\"
+        Rule: "OR('<org-name>-msp.admin')"
       Endorsement:
         Type: Signature
-        Rule: \"OR('${org_name}msp.peer')\"
+        Rule: "OR('<org-name>-msp.peer')"
     OrdererEndpoints:
-      $ord_endpoints
+      - <orderer-cluster-ip>:<orderer-cluster-port>
 Capabilities:
   Channel: &ChannelCapabilities
     V2_0: true
@@ -112,19 +51,19 @@ Application: &ApplicationDefaults
   Policies: &ApplicationDefaultPolicies
     LifecycleEndorsement:
       Type: ImplicitMeta
-      Rule: \"MAJORITY Endorsement\"
+      Rule: "MAJORITY Endorsement"
     Endorsement:
       Type: ImplicitMeta
-      Rule: \"MAJORITY Endorsement\"
+      Rule: "MAJORITY Endorsement"
     Readers:
       Type: ImplicitMeta
-      Rule: \"ANY Readers\"
+      Rule: "ANY Readers"
     Writers:
       Type: ImplicitMeta
-      Rule: \"ANY Writers\"
+      Rule: "ANY Writers"
     Admins:
       Type: ImplicitMeta
-      Rule: \"MAJORITY Admins\"
+      Rule: "MAJORITY Admins"
   Capabilities:
     <<: *ApplicationCapabilities
 Orderer: &OrdererDefaults
@@ -138,7 +77,10 @@ Orderer: &OrdererDefaults
   MaxChannels: 0
   EtcdRaft:
     Consenters:
-      $consenters
+      - Host: <orderer-external-ip>
+        Port: <orderer-external-port>
+        ClientTLSCert: <orderer-sign-certificate-path>
+        ServerTLSCert: <orderer-sign-certificate-path>
     Options:
       TickInterval: 500ms
       ElectionTick: 10
@@ -149,29 +91,29 @@ Orderer: &OrdererDefaults
   Policies:
     Readers:
       Type: ImplicitMeta
-      Rule: \"ANY Readers\"
+      Rule: "ANY Readers"
     Writers:
       Type: ImplicitMeta
-      Rule: \"ANY Writers\"
+      Rule: "ANY Writers"
     Admins:
       Type: ImplicitMeta
-      Rule: \"MAJORITY Admins\"
+      Rule: "MAJORITY Admins"
     BlockValidation:
       Type: ImplicitMeta
-      Rule: \"ANY Writers\"
+      Rule: "ANY Writers"
   Capabilities:
     <<: *OrdererCapabilities
 Channel: &ChannelDefaults
   Policies:
     Readers:
       Type: ImplicitMeta
-      Rule: \"ANY Readers\"
+      Rule: "ANY Readers"
     Writers:
       Type: ImplicitMeta
-      Rule: \"ANY Writers\"
+      Rule: "ANY Writers"
     Admins:
       Type: ImplicitMeta
-      Rule: \"MAJORITY Admins\"
+      Rule: "MAJORITY Admins"
   Capabilities:
     <<: *ChannelCapabilities
 Profiles:
@@ -181,21 +123,18 @@ Profiles:
       <<: *OrdererDefaults
       OrdererType: etcdraft
       Organizations:
-        - <<: *$org_config_name
+        - <<: *Org1
           Policies:
-            <<: *${org_config_name}Policies
+            <<: *Org1Policies
             Admins:
               Type: Signature
-              Rule: \"OR('${org_name}msp.admin')\"
+              Rule: "OR('<org-name>-msp.admin')"
     Application:
       <<: *ApplicationDefaults
       Organizations:
-        - <<: *$org_config_name
+        - <<: *Org1
           Policies:
-            <<: *${org_config_name}Policies
+            <<: *Org1Policies
             Admins:
               Type: Signature
-              Rule: \"OR('${org_name}msp.admin')\"
-" > "$config_dir/configtx.yaml"
-
-echo "---> generated $config_dir/configtx.yaml"
+              Rule: "OR('<org-name>-msp.admin')"

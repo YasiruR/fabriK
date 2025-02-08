@@ -1,8 +1,10 @@
 #!/bin/bash
 
+user_dir=$(eval echo ~$USER)
+
 hostname=''
 build_dir='/root/buildpack'
-hfb_dir='/root/hfb'
+hfb_dir="$user_dir/hfb/network"
 org_name='org'
 n_peers=1
 n_ords=1

@@ -1,7 +1,9 @@
 #!/bin/bash
 
+user_dir=$(eval echo ~$USER)
+
 hostname=''
-hfb_dir='/root/hfb'
+hfb_dir="$user_dir/hfb/network"
 org_name='org'
 chan_name='chan0'
 osn_admin='osnadmin'

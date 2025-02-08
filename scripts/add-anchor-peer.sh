@@ -101,3 +101,5 @@ cd /tmp/hyperledger/\"$org\"/\"$peer\"/artifacts/\"$chan\";
 export CORE_PEER_MSPCONFIGPATH=/tmp/hyperledger/\"$org\"/\"$peer\"/admin/msp;
 peer channel update -f anchor_update_in_envelope.pb -c \"$chan\" -o \"$ord_host\":\"$ord_port\" --ordererTLSHostnameOverride \"$ord_host\" --tls --cafile \"/tmp/hyperledger/$org/$peer/tls/cacerts/$tls_cert_file_name\";
 exit"
+
+rm -r "$hfb_dir/$org/peers/$peer/artifacts/$chan"
